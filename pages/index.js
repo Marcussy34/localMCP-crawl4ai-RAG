@@ -1,115 +1,338 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Globe, Code, Settings, PlayCircle } from "lucide-react";
 
 export default function Home() {
+  // State management for crawl configuration
+  const [url, setUrl] = useState("https://www.nbcnews.com/business");
+  const [extractionType, setExtractionType] = useState("markdown");
+  const [jsCode, setJsCode] = useState("");
+  const [cssSelector, setCssSelector] = useState("");
+  const [llmPrompt, setLlmPrompt] = useState("");
+  const [headless, setHeadless] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+
+  // Handle crawl submission
+  const handleCrawl = async () => {
+    setLoading(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const response = await fetch("/api/crawl", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          url,
+          extractionType,
+          jsCode,
+          cssSelector,
+          llmPrompt,
+          headless,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to crawl");
+      }
+
+      setResult(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div
-      className={`${geistSans.className} ${geistMono.className} font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20`}
-    >
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              pages/index.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="text-center space-y-2">
+          <h1 className="text-4xl font-bold tracking-tight">
+            🚀 Crawl4AI Testing Interface
+          </h1>
+          <p className="text-muted-foreground">
+            Test and explore Crawl4AI features with a beautiful UI
+          </p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Main Configuration Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="w-5 h-5" />
+              Crawl Configuration
+            </CardTitle>
+            <CardDescription>
+              Configure your web crawling and extraction settings
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* URL Input */}
+            <div className="space-y-2">
+              <Label htmlFor="url">Target URL</Label>
+              <Input
+                id="url"
+                type="url"
+                placeholder="https://example.com"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+              />
+            </div>
+
+            {/* Extraction Type Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="extraction-type">Extraction Strategy</Label>
+              <Select value={extractionType} onValueChange={setExtractionType}>
+                <SelectTrigger id="extraction-type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="markdown">
+                    📝 Markdown (Clean HTML to Markdown)
+                  </SelectItem>
+                  <SelectItem value="css">
+                    🎯 CSS Selector (Extract with CSS)
+                  </SelectItem>
+                  <SelectItem value="llm">
+                    🤖 LLM Extraction (AI-powered)
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Conditional Configuration Tabs */}
+            <Tabs defaultValue="basic" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="basic">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Basic
+                </TabsTrigger>
+                <TabsTrigger value="advanced">
+                  <Code className="w-4 h-4 mr-2" />
+                  Advanced
+                </TabsTrigger>
+                <TabsTrigger value="extraction">
+                  Extraction
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Basic Settings Tab */}
+              <TabsContent value="basic" className="space-y-4 mt-4">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="headless"
+                    checked={headless}
+                    onChange={(e) => setHeadless(e.target.checked)}
+                    className="rounded border-gray-300"
+                  />
+                  <Label htmlFor="headless">Run in Headless Mode</Label>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Headless mode runs the browser without a visible UI, faster for production.
+                </p>
+              </TabsContent>
+
+              {/* Advanced Settings Tab */}
+              <TabsContent value="advanced" className="space-y-4 mt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="js-code">Custom JavaScript Code</Label>
+                  <Textarea
+                    id="js-code"
+                    placeholder="(async () => { /* Your custom JS here */ })();"
+                    value={jsCode}
+                    onChange={(e) => setJsCode(e.target.value)}
+                    rows={6}
+                    className="font-mono text-sm"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Execute custom JavaScript before extraction (e.g., click buttons, scroll, etc.)
+                  </p>
+                </div>
+              </TabsContent>
+
+              {/* Extraction Settings Tab */}
+              <TabsContent value="extraction" className="space-y-4 mt-4">
+                {/* CSS Selector Extraction */}
+                {extractionType === "css" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="css-selector">CSS Selector</Label>
+                    <Input
+                      id="css-selector"
+                      placeholder=".article-content, h1, p"
+                      value={cssSelector}
+                      onChange={(e) => setCssSelector(e.target.value)}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Specify CSS selectors to extract specific elements
+                    </p>
+                  </div>
+                )}
+
+                {/* LLM Extraction */}
+                {extractionType === "llm" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="llm-prompt">LLM Extraction Prompt</Label>
+                    <Textarea
+                      id="llm-prompt"
+                      placeholder="Extract all product names and prices..."
+                      value={llmPrompt}
+                      onChange={(e) => setLlmPrompt(e.target.value)}
+                      rows={4}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Describe what you want to extract using natural language
+                    </p>
+                  </div>
+                )}
+
+                {/* Markdown - No additional config needed */}
+                {extractionType === "markdown" && (
+                  <p className="text-sm text-muted-foreground">
+                    Markdown extraction will convert the page to clean, readable markdown format.
+                  </p>
+                )}
+              </TabsContent>
+            </Tabs>
+
+            {/* Run Button */}
+            <Button
+              onClick={handleCrawl}
+              disabled={loading || !url}
+              className="w-full"
+              size="lg"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Crawling...
+                </>
+              ) : (
+                <>
+                  <PlayCircle className="mr-2 h-5 w-5" />
+                  Start Crawl
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Results Section */}
+        {(result || error) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Results</span>
+                {result && (
+                  <Badge variant="outline" className="font-mono">
+                    {result.success ? "✅ Success" : "❌ Failed"}
+                  </Badge>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {error && (
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                  <p className="text-red-800 dark:text-red-200 font-medium">
+                    Error: {error}
+                  </p>
+                </div>
+              )}
+
+              {result && (
+                <div className="space-y-4">
+                  {/* Result Metadata */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Status</p>
+                      <Badge>{result.status || "completed"}</Badge>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Type</p>
+                      <Badge variant="secondary">{extractionType}</Badge>
+                    </div>
+                    {result.wordCount && (
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground">Words</p>
+                        <p className="font-mono text-sm">{result.wordCount}</p>
+                      </div>
+                    )}
+                    {result.timing && (
+                      <div className="space-y-1">
+                        <p className="text-xs text-muted-foreground">Time</p>
+                        <p className="font-mono text-sm">{result.timing}ms</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Result Content */}
+                  <div className="space-y-2">
+                    <Label>Extracted Content</Label>
+                    <div className="relative">
+                      <Textarea
+                        value={
+                          typeof result.content === "string"
+                            ? result.content
+                            : JSON.stringify(result.content, null, 2)
+                        }
+                        readOnly
+                        rows={20}
+                        className="font-mono text-sm"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={() => {
+                          navigator.clipboard.writeText(
+                            typeof result.content === "string"
+                              ? result.content
+                              : JSON.stringify(result.content, null, 2)
+                          );
+                        }}
+                      >
+                        Copy
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Footer */}
+        <div className="text-center text-sm text-muted-foreground">
+          <p>
+            Powered by{" "}
+            <a
+              href="https://github.com/unclecode/crawl4ai"
+            target="_blank"
+            rel="noopener noreferrer"
+              className="font-medium underline underline-offset-4 hover:text-foreground"
+          >
+              Crawl4AI
+          </a>
+            {" • "}
+            Built with Next.js & shadcn/ui
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
