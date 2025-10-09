@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Globe, Code, Settings, PlayCircle, CheckCircle, XCircle, Clock, FileText, Layers, AlertTriangle } from "lucide-react";
+import { Loader2, Globe, Code, Settings, PlayCircle, CheckCircle, XCircle, Clock, FileText, Layers, AlertTriangle, Copy, Check } from "lucide-react";
 
 // Inter font is now loaded globally in _app.js
 
@@ -27,6 +27,25 @@ export default function Home() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [progress, setProgress] = useState(null);
+  const [copiedIndex, setCopiedIndex] = useState(null);
+  const [copiedAll, setCopiedAll] = useState(false);
+  const [copiedSingle, setCopiedSingle] = useState(false);
+
+  // Handle copy with visual feedback
+  const handleCopy = (text, type, index = null) => {
+    navigator.clipboard.writeText(text);
+    
+    if (type === 'all') {
+      setCopiedAll(true);
+      setTimeout(() => setCopiedAll(false), 2000);
+    } else if (type === 'single') {
+      setCopiedSingle(true);
+      setTimeout(() => setCopiedSingle(false), 2000);
+    } else if (type === 'page') {
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex(null), 2000);
+    }
+  };
 
   // Handle crawl submission
   const handleCrawl = async () => {
@@ -556,11 +575,19 @@ export default function Home() {
                                 <Button
                                   size="sm"
                                   className="absolute top-1 right-1"
-                                  onClick={() => {
-                                    navigator.clipboard.writeText(page.content);
-                                  }}
+                                  onClick={() => handleCopy(page.content, 'page', index)}
                                 >
-                                  Copy
+                                  {copiedIndex === index ? (
+                                    <>
+                                      <Check className="w-3 h-3 mr-1" />
+                                      Copied!
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Copy className="w-3 h-3 mr-1" />
+                                      Copy
+                                    </>
+                                  )}
                                 </Button>
                               </div>
                             </CardContent>
@@ -575,10 +602,20 @@ export default function Home() {
                           const allContent = result.pages
                             .map((page, i) => `# Page ${i + 1}: ${page.title}\n# URL: ${page.url}\n\n${page.content}`)
                             .join("\n\n---\n\n");
-                          navigator.clipboard.writeText(allContent);
+                          handleCopy(allContent, 'all');
                         }}
                       >
-                        Copy All Pages
+                        {copiedAll ? (
+                          <>
+                            <Check className="w-4 h-4 mr-2" />
+                            Copied All Pages!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-4 h-4 mr-2" />
+                            Copy All Pages
+                          </>
+                        )}
                       </Button>
                     </div>
                   ) : (
@@ -603,14 +640,23 @@ export default function Home() {
                           size="sm"
                           className="absolute top-2 right-2"
                           onClick={() => {
-                            navigator.clipboard.writeText(
-                              typeof result.content === "string"
-                                ? result.content
-                                : JSON.stringify(result.content, null, 2)
-                            );
+                            const content = typeof result.content === "string"
+                              ? result.content
+                              : JSON.stringify(result.content, null, 2);
+                            handleCopy(content, 'single');
                           }}
                         >
-                          Copy
+                          {copiedSingle ? (
+                            <>
+                              <Check className="w-3 h-3 mr-1" />
+                              Copied!
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3 h-3 mr-1" />
+                              Copy
+                            </>
+                          )}
                         </Button>
                       </div>
                     </div>
