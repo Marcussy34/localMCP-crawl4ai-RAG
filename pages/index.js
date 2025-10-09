@@ -19,6 +19,9 @@ export default function Home() {
   const [cssSelector, setCssSelector] = useState("");
   const [llmPrompt, setLlmPrompt] = useState("");
   const [headless, setHeadless] = useState(true);
+  const [deepCrawl, setDeepCrawl] = useState(false);
+  const [crawlStrategy, setCrawlStrategy] = useState("bfs");
+  const [maxPages, setMaxPages] = useState(10);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
@@ -42,6 +45,9 @@ export default function Home() {
           cssSelector,
           llmPrompt,
           headless,
+          deepCrawl,
+          crawlStrategy,
+          maxPages,
         }),
       });
 
@@ -148,6 +154,60 @@ export default function Home() {
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Headless mode runs the browser without a visible UI, faster for production.
                 </p>
+
+                {/* Deep Crawl Option */}
+                <div className="border-t pt-4 space-y-4">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="deepCrawl"
+                      checked={deepCrawl}
+                      onChange={(e) => setDeepCrawl(e.target.checked)}
+                      className="rounded border-gray-300"
+                    />
+                    <Label htmlFor="deepCrawl">Enable Deep Crawl (Entire Site)</Label>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Crawl multiple pages recursively instead of just a single page.
+                  </p>
+
+                  {/* Deep Crawl Configuration */}
+                  {deepCrawl && (
+                    <div className="pl-6 space-y-4 border-l-2 border-gray-200 dark:border-gray-700">
+                      <div className="space-y-2">
+                        <Label htmlFor="crawl-strategy">Crawl Strategy</Label>
+                        <Select value={crawlStrategy} onValueChange={setCrawlStrategy}>
+                          <SelectTrigger id="crawl-strategy">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="bfs">
+                              BFS (Breadth-First) - Crawl level by level
+                            </SelectItem>
+                            <SelectItem value="dfs">
+                              DFS (Depth-First) - Follow links deeply first
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="max-pages">Maximum Pages</Label>
+                        <Input
+                          id="max-pages"
+                          type="number"
+                          min="1"
+                          max="100"
+                          value={maxPages}
+                          onChange={(e) => setMaxPages(parseInt(e.target.value) || 10)}
+                        />
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                          Limit number of pages to crawl (1-100). More pages = longer time.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </TabsContent>
 
               {/* Advanced Settings Tab */}
@@ -266,12 +326,16 @@ export default function Home() {
                     </div>
                     <div className="space-y-1">
                       <p className="text-xs text-gray-600 dark:text-gray-400">Type</p>
-                      <Badge variant="secondary">{extractionType}</Badge>
+                      <Badge variant="secondary">
+                        {result.deepCrawl ? "Deep Crawl" : extractionType}
+                      </Badge>
                     </div>
-                    {result.wordCount && (
+                    {(result.wordCount || result.totalWords) && (
                       <div className="space-y-1">
                         <p className="text-xs text-gray-600 dark:text-gray-400">Words</p>
-                        <p className="font-mono text-sm text-gray-900 dark:text-gray-100">{result.wordCount}</p>
+                        <p className="font-mono text-sm text-gray-900 dark:text-gray-100">
+                          {result.totalWords || result.wordCount}
+                        </p>
                       </div>
                     )}
                     {result.timing && (
@@ -282,36 +346,104 @@ export default function Home() {
                     )}
                   </div>
 
-                  {/* Result Content */}
-                  <div className="space-y-2">
-                    <Label>Extracted Content</Label>
-                    <div className="relative">
-                      <Textarea
-                        value={
-                          typeof result.content === "string"
-                            ? result.content
-                            : JSON.stringify(result.content, null, 2)
-                        }
-                        readOnly
-                        rows={20}
-                        className="font-mono text-sm"
-                      />
+                  {/* Deep Crawl - Multiple Pages */}
+                  {result.deepCrawl && result.pages ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <Label>Crawled Pages ({result.totalPages})</Label>
+                        <Badge variant="outline">
+                          {result.totalPages} pages • {result.totalWords} total words
+                        </Badge>
+                      </div>
+                      
+                      <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                        {result.pages.map((page, index) => (
+                          <Card key={index}>
+                            <CardHeader className="pb-3">
+                              <div className="flex items-start justify-between">
+                                <div className="space-y-1">
+                                  <CardTitle className="text-sm font-medium">
+                                    {page.title || `Page ${index + 1}`}
+                                  </CardTitle>
+                                  <CardDescription className="text-xs">
+                                    {page.url}
+                                  </CardDescription>
+                                </div>
+                                <Badge variant="secondary" className="ml-2">
+                                  {page.wordCount} words
+                                </Badge>
+                              </div>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="relative">
+                                <Textarea
+                                  value={page.content}
+                                  readOnly
+                                  rows={6}
+                                  className="font-mono text-xs"
+                                />
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="absolute top-1 right-1"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(page.content);
+                                  }}
+                                >
+                                  Copy
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+
+                      {/* Copy All Button */}
                       <Button
                         variant="outline"
-                        size="sm"
-                        className="absolute top-2 right-2"
+                        className="w-full"
                         onClick={() => {
-                          navigator.clipboard.writeText(
+                          const allContent = result.pages
+                            .map((page, i) => `# Page ${i + 1}: ${page.title}\n# URL: ${page.url}\n\n${page.content}`)
+                            .join("\n\n---\n\n");
+                          navigator.clipboard.writeText(allContent);
+                        }}
+                      >
+                        Copy All Pages
+                      </Button>
+                    </div>
+                  ) : (
+                    /* Single Page Result */
+                    <div className="space-y-2">
+                      <Label>Extracted Content</Label>
+                      <div className="relative">
+                        <Textarea
+                          value={
                             typeof result.content === "string"
                               ? result.content
                               : JSON.stringify(result.content, null, 2)
-                          );
-                        }}
-                      >
-                        Copy
-                      </Button>
+                          }
+                          readOnly
+                          rows={20}
+                          className="font-mono text-sm"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="absolute top-2 right-2"
+                          onClick={() => {
+                            navigator.clipboard.writeText(
+                              typeof result.content === "string"
+                                ? result.content
+                                : JSON.stringify(result.content, null, 2)
+                            );
+                          }}
+                        >
+                          Copy
+                        </Button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
             </CardContent>
