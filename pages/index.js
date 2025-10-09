@@ -131,7 +131,7 @@ export default function Home() {
             🚀 Crawl4AI Testing Interface
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Test and explore Crawl4AI features with a beautiful UI
+            Test and explore Crawl4AI features
           </p>
         </div>
 
