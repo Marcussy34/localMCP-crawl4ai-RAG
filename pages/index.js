@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Globe, Code, Settings, PlayCircle } from "lucide-react";
+import { Loader2, Globe, Code, Settings, PlayCircle, CheckCircle, XCircle, Clock, FileText, Layers, AlertTriangle } from "lucide-react";
 
 // Inter font is now loaded globally in _app.js
 
@@ -130,7 +130,7 @@ export default function Home() {
           <CardContent className="space-y-6">
             {/* URL Input */}
             <div className="space-y-2">
-              <Label htmlFor="url">Target URL</Label>
+              <Label htmlFor="url" className="text-gray-900 dark:text-gray-100">Target URL</Label>
               <Input
                 id="url"
                 type="url"
@@ -142,7 +142,7 @@ export default function Home() {
 
             {/* Extraction Type Selection */}
             <div className="space-y-2">
-              <Label htmlFor="extraction-type">Extraction Strategy</Label>
+              <Label htmlFor="extraction-type" className="text-gray-900 dark:text-gray-100">Extraction Strategy</Label>
               <Select value={extractionType} onValueChange={setExtractionType}>
                 <SelectTrigger id="extraction-type">
                   <SelectValue />
@@ -196,7 +196,7 @@ export default function Home() {
                     onChange={(e) => setHeadless(e.target.checked)}
                     className="rounded border-gray-300"
                   />
-                  <Label htmlFor="headless">Run in Headless Mode</Label>
+                  <Label htmlFor="headless" className="text-gray-900 dark:text-gray-100">Run in Headless Mode</Label>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Headless mode runs the browser without a visible UI, faster for production.
@@ -212,7 +212,7 @@ export default function Home() {
                       onChange={(e) => setDeepCrawl(e.target.checked)}
                       className="rounded border-gray-300"
                     />
-                    <Label htmlFor="deepCrawl">Enable Deep Crawl (Entire Site)</Label>
+                    <Label htmlFor="deepCrawl" className="text-gray-900 dark:text-gray-100">Enable Deep Crawl (Entire Site)</Label>
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Crawl multiple pages recursively instead of just a single page.
@@ -222,7 +222,7 @@ export default function Home() {
                   {deepCrawl && (
                     <div className="pl-6 space-y-4 border-l-2 border-gray-200 dark:border-gray-700">
                       <div className="space-y-2">
-                        <Label htmlFor="crawl-strategy">Crawl Strategy</Label>
+                        <Label htmlFor="crawl-strategy" className="text-gray-900 dark:text-gray-100">Crawl Strategy</Label>
                         <Select value={crawlStrategy} onValueChange={setCrawlStrategy}>
                           <SelectTrigger id="crawl-strategy">
                             <SelectValue />
@@ -239,7 +239,7 @@ export default function Home() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="max-pages">Maximum Pages</Label>
+                        <Label htmlFor="max-pages" className="text-gray-900 dark:text-gray-100">Maximum Pages</Label>
                         <Input
                           id="max-pages"
                           type="number"
@@ -259,7 +259,7 @@ export default function Home() {
                             onChange={(e) => setUnlimitedPages(e.target.checked)}
                             className="rounded border-gray-300"
                           />
-                          <Label htmlFor="unlimited-pages" className="text-sm font-normal">
+                          <Label htmlFor="unlimited-pages" className="text-sm font-normal text-gray-900 dark:text-gray-100">
                             Unlimited (Crawl entire site)
                           </Label>
                         </div>
@@ -279,14 +279,14 @@ export default function Home() {
               {/* Advanced Settings Tab */}
               <TabsContent value="advanced" className="space-y-4 mt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="js-code">Custom JavaScript Code</Label>
+                  <Label htmlFor="js-code" className="text-gray-900 dark:text-gray-100">Custom JavaScript Code</Label>
                   <Textarea
                     id="js-code"
                     placeholder="(async () => { /* Your custom JS here */ })();"
                     value={jsCode}
                     onChange={(e) => setJsCode(e.target.value)}
                     rows={6}
-                    className="font-mono text-sm"
+                    className="font-mono text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-950"
                   />
                   <p className="text-sm text-gray-600 dark:text-gray-400">
                     Execute custom JavaScript before extraction (e.g., click buttons, scroll, etc.)
@@ -299,7 +299,7 @@ export default function Home() {
                 {/* CSS Selector Extraction */}
                 {extractionType === "css" && (
                   <div className="space-y-2">
-                    <Label htmlFor="css-selector">CSS Selector</Label>
+                    <Label htmlFor="css-selector" className="text-gray-900 dark:text-gray-100">CSS Selector</Label>
                     <Input
                       id="css-selector"
                       placeholder=".article-content, h1, p"
@@ -315,13 +315,14 @@ export default function Home() {
                 {/* LLM Extraction */}
                 {extractionType === "llm" && (
                   <div className="space-y-2">
-                    <Label htmlFor="llm-prompt">LLM Extraction Prompt</Label>
+                    <Label htmlFor="llm-prompt" className="text-gray-900 dark:text-gray-100">LLM Extraction Prompt</Label>
                     <Textarea
                       id="llm-prompt"
                       placeholder="Extract all product names and prices..."
                       value={llmPrompt}
                       onChange={(e) => setLlmPrompt(e.target.value)}
                       rows={4}
+                      className="text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-950"
                     />
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       Describe what you want to extract using natural language
@@ -341,9 +342,12 @@ export default function Home() {
             {/* Run Button */}
             {deepCrawl && unlimitedPages && (
               <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
-                <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                  ⚠️ <strong>Unlimited crawl mode:</strong> This will crawl ALL discoverable pages on the site. 
-                  This may take several minutes to hours depending on the site size.
+                <p className="text-sm text-yellow-800 dark:text-yellow-200 flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>
+                    <strong>Unlimited crawl mode:</strong> This will crawl ALL discoverable pages on the site. 
+                    This may take several minutes to hours depending on the site size.
+                  </span>
                 </p>
               </div>
             )}
@@ -398,7 +402,7 @@ export default function Home() {
                 )}
                 <div className="space-y-1">
                   <p className="text-xs text-gray-600 dark:text-gray-400">Status</p>
-                  <Badge variant="outline" className="text-sm capitalize">
+                  <Badge variant="outline" className="text-sm capitalize text-gray-900 dark:text-gray-100">
                     {progress.status || "crawling"}
                   </Badge>
                 </div>
@@ -438,8 +442,18 @@ export default function Home() {
               <CardTitle className="flex items-center justify-between">
                 <span>Results</span>
                 {result && (
-                  <Badge variant="outline" className="font-mono">
-                    {result.success ? "✅ Success" : "❌ Failed"}
+                  <Badge variant="outline" className="font-mono text-gray-900 dark:text-gray-100">
+                    {result.success ? (
+                      <span className="flex items-center gap-1">
+                        <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                        Success
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1">
+                        <XCircle className="w-4 h-4 text-red-600 dark:text-red-400" />
+                        Failed
+                      </span>
+                    )}
                   </Badge>
                 )}
               </CardTitle>
@@ -459,12 +473,25 @@ export default function Home() {
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="space-y-1">
                       <p className="text-xs text-gray-600 dark:text-gray-400">Status</p>
-                      <Badge>{result.status || "completed"}</Badge>
+                      <Badge className="text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-800">
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        {result.status || "completed"}
+                      </Badge>
                     </div>
                     <div className="space-y-1">
                       <p className="text-xs text-gray-600 dark:text-gray-400">Type</p>
-                      <Badge variant="secondary">
-                        {result.deepCrawl ? "Deep Crawl" : extractionType}
+                      <Badge variant="secondary" className="text-gray-900 dark:text-gray-100">
+                        {result.deepCrawl ? (
+                          <>
+                            <Layers className="w-3 h-3 mr-1" />
+                            Deep Crawl
+                          </>
+                        ) : (
+                          <>
+                            <FileText className="w-3 h-3 mr-1" />
+                            {extractionType}
+                          </>
+                        )}
                       </Badge>
                     </div>
                     {(result.wordCount || result.totalWords) && (
@@ -478,7 +505,10 @@ export default function Home() {
                     {result.timing && (
                       <div className="space-y-1">
                         <p className="text-xs text-gray-600 dark:text-gray-400">Time</p>
-                        <p className="font-mono text-sm text-gray-900 dark:text-gray-100">{result.timing}ms</p>
+                        <p className="font-mono text-sm text-gray-900 dark:text-gray-100">
+                          <Clock className="w-3 h-3 inline mr-1" />
+                          {result.timing}ms
+                        </p>
                       </div>
                     )}
                   </div>
@@ -487,8 +517,11 @@ export default function Home() {
                   {result.deepCrawl && result.pages ? (
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <Label>Crawled Pages ({result.totalPages})</Label>
-                        <Badge variant="outline">
+                        <Label className="text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                          <Layers className="w-4 h-4" />
+                          Crawled Pages ({result.totalPages})
+                        </Label>
+                        <Badge variant="outline" className="text-gray-900 dark:text-gray-100">
                           {result.totalPages} pages • {result.totalWords} total words
                         </Badge>
                       </div>
@@ -499,14 +532,15 @@ export default function Home() {
                             <CardHeader className="pb-3">
                               <div className="flex items-start justify-between">
                                 <div className="space-y-1">
-                                  <CardTitle className="text-sm font-medium">
+                                  <CardTitle className="text-sm font-medium text-gray-900 dark:text-gray-100">
                                     {page.title || `Page ${index + 1}`}
                                   </CardTitle>
-                                  <CardDescription className="text-xs">
+                                  <CardDescription className="text-xs text-gray-600 dark:text-gray-400">
                                     {page.url}
                                   </CardDescription>
                                 </div>
-                                <Badge variant="secondary" className="ml-2">
+                                <Badge variant="secondary" className="ml-2 text-gray-900 dark:text-gray-100">
+                                  <FileText className="w-3 h-3 mr-1" />
                                   {page.wordCount} words
                                 </Badge>
                               </div>
@@ -517,10 +551,9 @@ export default function Home() {
                                   value={page.content}
                                   readOnly
                                   rows={6}
-                                  className="font-mono text-xs"
+                                  className="font-mono text-xs text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-950"
                                 />
                                 <Button
-                                  variant="ghost"
                                   size="sm"
                                   className="absolute top-1 right-1"
                                   onClick={() => {
@@ -537,7 +570,6 @@ export default function Home() {
 
                       {/* Copy All Button */}
                       <Button
-                        variant="outline"
                         className="w-full"
                         onClick={() => {
                           const allContent = result.pages
@@ -552,7 +584,10 @@ export default function Home() {
                   ) : (
                     /* Single Page Result */
                     <div className="space-y-2">
-                      <Label>Extracted Content</Label>
+                      <Label className="text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                        <FileText className="w-4 h-4" />
+                        Extracted Content
+                      </Label>
                       <div className="relative">
                         <Textarea
                           value={
@@ -562,10 +597,9 @@ export default function Home() {
                           }
                           readOnly
                           rows={20}
-                          className="font-mono text-sm"
+                          className="font-mono text-sm text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-950"
                         />
                         <Button
-                          variant="outline"
                           size="sm"
                           className="absolute top-2 right-2"
                           onClick={() => {
