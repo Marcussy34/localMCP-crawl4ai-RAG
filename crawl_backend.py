@@ -13,6 +13,8 @@ from io import StringIO
 from contextlib import redirect_stdout, redirect_stderr
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode
 from crawl4ai import BFSDeepCrawlStrategy, DFSDeepCrawlStrategy
+from urllib.parse import urljoin, urlparse
+from collections import deque
 
 # Suppress Crawl4AI logging output to keep JSON clean
 os.environ['CRAWL4AI_QUIET'] = '1'
@@ -25,7 +27,7 @@ logging.basicConfig(
 )
 
 async def crawl(url, extraction_type="markdown", js_code=None, css_selector=None, llm_prompt=None, headless=True, 
-                deep_crawl=False, crawl_strategy="bfs", max_pages=10):
+                deep_crawl=False, crawl_strategy="bfs", max_pages=10, stream_progress=False, session_id=None):
     """
     Main crawl function that processes different extraction strategies
     
@@ -39,7 +41,40 @@ async def crawl(url, extraction_type="markdown", js_code=None, css_selector=None
         deep_crawl: Whether to crawl multiple pages (entire site)
         crawl_strategy: Strategy for deep crawling (bfs or dfs)
         max_pages: Maximum number of pages to crawl (limit for safety)
+        stream_progress: Whether to stream progress updates to stderr
+        session_id: Session ID for progress tracking via file
     """
+    
+    def write_progress(crawled, total, current_url="", status="crawling"):
+        """Write progress to file for polling"""
+        if session_id:
+            progress_file = f"/tmp/crawl_progress_{session_id}.json"
+            progress_data = {
+                "crawled": crawled,
+                "total": total if total != float('inf') else "unlimited",
+                "currentUrl": current_url,
+                "status": status
+            }
+            try:
+                with open(progress_file, 'w') as f:
+                    json.dump(progress_data, f)
+            except Exception as e:
+                # Don't fail crawl if progress writing fails
+                pass
+    
+    def emit_progress(crawled, total, current_url=""):
+        """Emit progress to stderr for streaming API"""
+        if stream_progress:
+            progress_data = json.dumps({
+                "crawled": crawled,
+                "total": total if total != float('inf') else "unlimited",
+                "currentUrl": current_url,
+                "status": "crawling"
+            })
+            print(f"PROGRESS:{progress_data}", file=sys.stderr, flush=True)
+        
+        # Always write to file if session_id exists
+        write_progress(crawled, total, current_url)
     try:
         # Configure browser - disable verbose logging
         browser_config = BrowserConfig(
@@ -80,23 +115,117 @@ async def crawl(url, extraction_type="markdown", js_code=None, css_selector=None
         stderr_buffer = StringIO()
         
         # Create crawler and run
-        with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
-            async with AsyncWebCrawler(config=browser_config) as crawler:
-                if deep_crawl and crawl_strategy_obj:
-                    # Deep crawl - use strategy's own arun method
-                    # This returns a list of CrawlResult objects directly
-                    crawled_results = await crawl_strategy_obj.arun(
-                        start_url=url,
-                        crawler=crawler,
-                        config=run_config
-                    )
-                else:
-                    # Single page crawl
-                    result = await crawler.arun(
-                        url=url,
-                        config=run_config
-                    )
-                    crawled_results = None
+        if stream_progress:
+            # Don't redirect stderr when streaming progress
+            with redirect_stdout(stdout_buffer):
+                async with AsyncWebCrawler(config=browser_config) as crawler:
+                    if deep_crawl and crawl_strategy_obj:
+                        write_progress(0, actual_max_pages, url, "starting")
+                        
+                        # Custom deep crawl with progress tracking
+                        visited = set()
+                        to_visit = deque([url])
+                        crawled_results = []
+                        base_domain = urlparse(url).netloc
+                        
+                        while to_visit and len(crawled_results) < actual_max_pages:
+                            current_url = to_visit.popleft()
+                            
+                            # Skip if already visited
+                            if current_url in visited:
+                                continue
+                            
+                            visited.add(current_url)
+                            
+                            try:
+                                # Crawl the current page
+                                write_progress(len(crawled_results), actual_max_pages, current_url, "crawling")
+                                
+                                result = await crawler.arun(url=current_url, config=run_config)
+                                crawled_results.append(result)
+                                
+                                # Extract links from the page (only same domain)
+                                if hasattr(result, 'links') and result.links:
+                                    for link_data in result.links.get('internal', []):
+                                        link_url = link_data.get('href', '')
+                                        if link_url:
+                                            # Make absolute URL
+                                            absolute_url = urljoin(current_url, link_url)
+                                            parsed = urlparse(absolute_url)
+                                            
+                                            # Only add if same domain and not visited
+                                            if parsed.netloc == base_domain and absolute_url not in visited:
+                                                if crawl_strategy == "bfs":
+                                                    to_visit.append(absolute_url)  # BFS: add to end
+                                                else:
+                                                    to_visit.appendleft(absolute_url)  # DFS: add to front
+                                
+                            except Exception as e:
+                                # Skip failed pages
+                                print(f"Failed to crawl {current_url}: {str(e)}", file=sys.stderr)
+                                continue
+                        
+                        write_progress(len(crawled_results), actual_max_pages, "Processing results...", "processing")
+                    else:
+                        result = await crawler.arun(
+                            url=url,
+                            config=run_config
+                        )
+                        crawled_results = None
+        else:
+            # Redirect both stdout and stderr
+            with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
+                async with AsyncWebCrawler(config=browser_config) as crawler:
+                    if deep_crawl and crawl_strategy_obj:
+                        # Custom deep crawl with progress tracking
+                        visited = set()
+                        to_visit = deque([url])
+                        crawled_results = []
+                        base_domain = urlparse(url).netloc
+                        
+                        while to_visit and len(crawled_results) < actual_max_pages:
+                            current_url = to_visit.popleft()
+                            
+                            # Skip if already visited
+                            if current_url in visited:
+                                continue
+                            
+                            visited.add(current_url)
+                            
+                            try:
+                                # Crawl the current page
+                                write_progress(len(crawled_results), actual_max_pages, current_url, "crawling")
+                                
+                                result = await crawler.arun(url=current_url, config=run_config)
+                                crawled_results.append(result)
+                                
+                                # Extract links from the page (only same domain)
+                                if hasattr(result, 'links') and result.links:
+                                    for link_data in result.links.get('internal', []):
+                                        link_url = link_data.get('href', '')
+                                        if link_url:
+                                            # Make absolute URL
+                                            absolute_url = urljoin(current_url, link_url)
+                                            parsed = urlparse(absolute_url)
+                                            
+                                            # Only add if same domain and not visited
+                                            if parsed.netloc == base_domain and absolute_url not in visited:
+                                                if crawl_strategy == "bfs":
+                                                    to_visit.append(absolute_url)  # BFS: add to end
+                                                else:
+                                                    to_visit.appendleft(absolute_url)  # DFS: add to front
+                                
+                            except Exception as e:
+                                # Skip failed pages
+                                continue
+                        
+                        write_progress(len(crawled_results), actual_max_pages, "Processing results...", "processing")
+                    else:
+                        result = await crawler.arun(
+                            url=url,
+                            config=run_config
+                        )
+                        crawled_results = None
         
         # Process result based on extraction type (outside redirect blocks)
         if extraction_type == "markdown":
@@ -126,6 +255,9 @@ async def crawl(url, extraction_type="markdown", js_code=None, css_selector=None
                             "wordCount": word_count,
                             "title": title or f"Page {len(pages) + 1}"
                         })
+                    
+                    # Write final progress before returning
+                    write_progress(len(pages), actual_max_pages, "Completed", "completed")
                     
                     return {
                         "success": True,
@@ -215,6 +347,8 @@ def main():
         deep_crawl = params.get("deepCrawl", False)
         crawl_strategy = params.get("crawlStrategy", "bfs")
         max_pages = params.get("maxPages", 10)
+        stream_progress = params.get("streamProgress", False)
+        session_id = params.get("sessionId")
         
         # Validate URL
         if not url:
@@ -223,6 +357,22 @@ def main():
                 "error": "URL is required"
             }))
             sys.exit(1)
+        
+        # Write initial progress if session_id exists
+        if session_id and deep_crawl:
+            progress_file = f"/tmp/crawl_progress_{session_id}.json"
+            actual_max = float('inf') if max_pages == 0 else max_pages
+            initial_progress = {
+                "crawled": 0,
+                "total": "unlimited" if max_pages == 0 else max_pages,
+                "currentUrl": url,
+                "status": "initializing"
+            }
+            try:
+                with open(progress_file, 'w') as f:
+                    json.dump(initial_progress, f)
+            except:
+                pass
         
         # Run the crawl
         result = asyncio.run(crawl(
@@ -234,8 +384,19 @@ def main():
             headless=headless,
             deep_crawl=deep_crawl,
             crawl_strategy=crawl_strategy,
-            max_pages=max_pages
+            max_pages=max_pages,
+            stream_progress=stream_progress,
+            session_id=session_id
         ))
+        
+        # Clean up progress file
+        if session_id:
+            progress_file = f"/tmp/crawl_progress_{session_id}.json"
+            try:
+                if os.path.exists(progress_file):
+                    os.remove(progress_file)
+            except:
+                pass
         
         # Output result as JSON
         print(json.dumps(result))

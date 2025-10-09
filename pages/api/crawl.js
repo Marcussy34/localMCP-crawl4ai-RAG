@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { url, extractionType, jsCode, cssSelector, llmPrompt, headless, deepCrawl, crawlStrategy, maxPages } = req.body;
+    const { url, extractionType, jsCode, cssSelector, llmPrompt, headless, deepCrawl, crawlStrategy, maxPages, sessionId } = req.body;
 
     // Validate URL
     if (!url) {
@@ -36,7 +36,8 @@ export default async function handler(req, res) {
       headless,
       deepCrawl,
       crawlStrategy,
-      maxPages
+      maxPages,
+      sessionId: sessionId || null
     });
 
     // Call Python backend

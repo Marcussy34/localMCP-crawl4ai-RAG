@@ -26,14 +26,45 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [progress, setProgress] = useState(null);
 
   // Handle crawl submission
   const handleCrawl = async () => {
     setLoading(true);
     setError(null);
     setResult(null);
+    setProgress(null);
+
+    // Generate session ID for progress tracking
+    const sessionId = `crawl_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    let pollInterval = null;
 
     try {
+      // Start polling for progress if deep crawl
+      if (deepCrawl) {
+        // Set initial progress state
+        setProgress({
+          crawled: 0,
+          total: unlimitedPages ? "unlimited" : maxPages,
+          currentUrl: url,
+          status: "starting"
+        });
+        
+        pollInterval = setInterval(async () => {
+          try {
+            const progressRes = await fetch(`/api/crawl-progress?sessionId=${sessionId}`);
+            const progressData = await progressRes.json();
+            
+            if (progressData.status && progressData.status !== 'not_found') {
+              setProgress(progressData);
+            }
+          } catch (err) {
+            console.error('Progress polling error:', err);
+          }
+        }, 1000); // Poll every second
+      }
+
+      // Start the actual crawl
       const response = await fetch("/api/crawl", {
         method: "POST",
         headers: {
@@ -49,6 +80,7 @@ export default function Home() {
           deepCrawl,
           crawlStrategy,
           maxPages: unlimitedPages ? 0 : maxPages,
+          sessionId: deepCrawl ? sessionId : null,
         }),
       });
 
@@ -62,7 +94,12 @@ export default function Home() {
     } catch (err) {
       setError(err.message);
     } finally {
+      // Stop polling
+      if (pollInterval) {
+        clearInterval(pollInterval);
+      }
       setLoading(false);
+      setProgress(null);
     }
   };
 
@@ -331,6 +368,68 @@ export default function Home() {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Progress Display */}
+        {loading && progress && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Crawling in Progress
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Progress Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Pages Crawled</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                    {progress.crawled}
+                    {progress.total !== "unlimited" && ` / ${progress.total}`}
+                  </p>
+                </div>
+                {progress.total !== "unlimited" && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Progress</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                      {Math.round((progress.crawled / progress.total) * 100)}%
+                    </p>
+                  </div>
+                )}
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Status</p>
+                  <Badge variant="outline" className="text-sm capitalize">
+                    {progress.status || "crawling"}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              {progress.total !== "unlimited" && (
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                  <div 
+                    className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+                    style={{ width: `${Math.min((progress.crawled / progress.total) * 100, 100)}%` }}
+                  ></div>
+                </div>
+              )}
+
+              {/* Current URL */}
+              {progress.currentUrl && (
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Current Page</p>
+                  <p className="text-sm font-mono text-gray-700 dark:text-gray-300 truncate">
+                    {progress.currentUrl}
+                  </p>
+                </div>
+              )}
+
+              <p className="text-xs text-gray-500 dark:text-gray-400 italic">
+                ⏳ This may take a while. Progress updates as pages are crawled...
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Results Section */}
         {(result || error) && (
