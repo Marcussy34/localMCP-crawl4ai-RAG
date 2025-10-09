@@ -60,16 +60,19 @@ async def crawl(url, extraction_type="markdown", js_code=None, css_selector=None
         # Configure deep crawling if enabled
         crawl_strategy_obj = None
         if deep_crawl:
+            # Use infinity for unlimited crawling (max_pages = 0 means unlimited)
+            actual_max_pages = float('inf') if max_pages == 0 else max_pages
+            
             # Choose strategy based on user preference
             if crawl_strategy == "dfs":
                 crawl_strategy_obj = DFSDeepCrawlStrategy(
                     max_depth=10,
-                    max_pages=max_pages
+                    max_pages=actual_max_pages
                 )
             else:  # bfs (default)
                 crawl_strategy_obj = BFSDeepCrawlStrategy(
                     max_depth=10,
-                    max_pages=max_pages
+                    max_pages=actual_max_pages
                 )
         
         # Redirect stdout/stderr during crawling to suppress Crawl4AI output

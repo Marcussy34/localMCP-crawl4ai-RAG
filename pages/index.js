@@ -22,6 +22,7 @@ export default function Home() {
   const [deepCrawl, setDeepCrawl] = useState(false);
   const [crawlStrategy, setCrawlStrategy] = useState("bfs");
   const [maxPages, setMaxPages] = useState(10);
+  const [unlimitedPages, setUnlimitedPages] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
@@ -47,7 +48,7 @@ export default function Home() {
           headless,
           deepCrawl,
           crawlStrategy,
-          maxPages,
+          maxPages: unlimitedPages ? 0 : maxPages,
         }),
       });
 
@@ -206,12 +207,31 @@ export default function Home() {
                           id="max-pages"
                           type="number"
                           min="1"
-                          max="100"
+                          max="1000"
                           value={maxPages}
                           onChange={(e) => setMaxPages(parseInt(e.target.value) || 10)}
+                          disabled={unlimitedPages}
+                          className={unlimitedPages ? "opacity-50" : ""}
                         />
+                        
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id="unlimited-pages"
+                            checked={unlimitedPages}
+                            onChange={(e) => setUnlimitedPages(e.target.checked)}
+                            className="rounded border-gray-300"
+                          />
+                          <Label htmlFor="unlimited-pages" className="text-sm font-normal">
+                            Unlimited (Crawl entire site)
+                          </Label>
+                        </div>
+                        
                         <p className="text-xs text-gray-600 dark:text-gray-400">
-                          Limit number of pages to crawl (1-100). More pages = longer time.
+                          {unlimitedPages 
+                            ? "⚠️ Will crawl ALL discoverable pages. May take a very long time!"
+                            : "Limit: 1-1000 pages. More pages = longer time."
+                          }
                         </p>
                       </div>
                     </div>
@@ -282,6 +302,15 @@ export default function Home() {
             </Tabs>
 
             {/* Run Button */}
+            {deepCrawl && unlimitedPages && (
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  ⚠️ <strong>Unlimited crawl mode:</strong> This will crawl ALL discoverable pages on the site. 
+                  This may take several minutes to hours depending on the site size.
+                </p>
+              </div>
+            )}
+            
             <Button
               onClick={handleCrawl}
               disabled={loading || !url}
@@ -291,12 +320,12 @@ export default function Home() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Crawling...
+                  {deepCrawl && unlimitedPages ? "Crawling entire site..." : "Crawling..."}
                 </>
               ) : (
                 <>
                   <PlayCircle className="mr-2 h-5 w-5" />
-                  Start Crawl
+                  {deepCrawl && unlimitedPages ? "Start Unlimited Crawl" : "Start Crawl"}
                 </>
               )}
             </Button>
