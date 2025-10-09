@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Globe, Code, Settings, PlayCircle } from "lucide-react";
 
+// Inter font is now loaded globally in _app.js
+
 export default function Home() {
   // State management for crawl configuration
   const [url, setUrl] = useState("https://www.nbcnews.com/business");
