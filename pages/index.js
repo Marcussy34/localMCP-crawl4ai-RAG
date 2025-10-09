@@ -64,10 +64,10 @@ export default function Home() {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold tracking-tight">
+          <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
             🚀 Crawl4AI Testing Interface
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-gray-600 dark:text-gray-400">
             Test and explore Crawl4AI features with a beautiful UI
           </p>
         </div>
@@ -145,7 +145,7 @@ export default function Home() {
                   />
                   <Label htmlFor="headless">Run in Headless Mode</Label>
                 </div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   Headless mode runs the browser without a visible UI, faster for production.
                 </p>
               </TabsContent>
@@ -162,7 +162,7 @@ export default function Home() {
                     rows={6}
                     className="font-mono text-sm"
                   />
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
                     Execute custom JavaScript before extraction (e.g., click buttons, scroll, etc.)
                   </p>
                 </div>
@@ -180,7 +180,7 @@ export default function Home() {
                       value={cssSelector}
                       onChange={(e) => setCssSelector(e.target.value)}
                     />
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Specify CSS selectors to extract specific elements
                     </p>
                   </div>
@@ -197,7 +197,7 @@ export default function Home() {
                       onChange={(e) => setLlmPrompt(e.target.value)}
                       rows={4}
                     />
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Describe what you want to extract using natural language
                     </p>
                   </div>
@@ -205,7 +205,7 @@ export default function Home() {
 
                 {/* Markdown - No additional config needed */}
                 {extractionType === "markdown" && (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
                     Markdown extraction will convert the page to clean, readable markdown format.
                   </p>
                 )}
@@ -261,23 +261,23 @@ export default function Home() {
                   {/* Result Metadata */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="space-y-1">
-                      <p className="text-xs text-muted-foreground">Status</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">Status</p>
                       <Badge>{result.status || "completed"}</Badge>
                     </div>
                     <div className="space-y-1">
-                      <p className="text-xs text-muted-foreground">Type</p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">Type</p>
                       <Badge variant="secondary">{extractionType}</Badge>
                     </div>
                     {result.wordCount && (
                       <div className="space-y-1">
-                        <p className="text-xs text-muted-foreground">Words</p>
-                        <p className="font-mono text-sm">{result.wordCount}</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">Words</p>
+                        <p className="font-mono text-sm text-gray-900 dark:text-gray-100">{result.wordCount}</p>
                       </div>
                     )}
                     {result.timing && (
                       <div className="space-y-1">
-                        <p className="text-xs text-muted-foreground">Time</p>
-                        <p className="font-mono text-sm">{result.timing}ms</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">Time</p>
+                        <p className="font-mono text-sm text-gray-900 dark:text-gray-100">{result.timing}ms</p>
                       </div>
                     )}
                   </div>
@@ -319,14 +319,14 @@ export default function Home() {
         )}
 
         {/* Footer */}
-        <div className="text-center text-sm text-muted-foreground">
+        <div className="text-center text-sm text-gray-600 dark:text-gray-400">
           <p>
             Powered by{" "}
             <a
               href="https://github.com/unclecode/crawl4ai"
             target="_blank"
             rel="noopener noreferrer"
-              className="font-medium underline underline-offset-4 hover:text-foreground"
+              className="font-medium underline underline-offset-4 hover:text-gray-900 dark:hover:text-gray-100"
           >
               Crawl4AI
           </a>
