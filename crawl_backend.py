@@ -12,7 +12,7 @@ import logging
 from io import StringIO
 from contextlib import redirect_stdout, redirect_stderr
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode
-from crawl4ai.deep_crawl_config import DeepCrawlConfig
+from crawl4ai import BFSDeepCrawlStrategy, DFSDeepCrawlStrategy
 
 # Suppress Crawl4AI logging output to keep JSON clean
 os.environ['CRAWL4AI_QUIET'] = '1'
@@ -58,14 +58,19 @@ async def crawl(url, extraction_type="markdown", js_code=None, css_selector=None
             run_config.js_code = [js_code]
         
         # Configure deep crawling if enabled
-        deep_config = None
+        crawl_strategy_obj = None
         if deep_crawl:
-            deep_config = DeepCrawlConfig(
-                max_depth=10,  # Maximum depth to crawl
-                max_pages=max_pages,  # Maximum pages limit
-                strategy=crawl_strategy,  # "bfs" or "dfs"
-                same_domain_only=True  # Stay on same domain
-            )
+            # Choose strategy based on user preference
+            if crawl_strategy == "dfs":
+                crawl_strategy_obj = DFSDeepCrawlStrategy(
+                    max_depth=10,
+                    max_pages=max_pages
+                )
+            else:  # bfs (default)
+                crawl_strategy_obj = BFSDeepCrawlStrategy(
+                    max_depth=10,
+                    max_pages=max_pages
+                )
         
         # Redirect stdout/stderr during crawling to suppress Crawl4AI output
         stdout_buffer = StringIO()
@@ -74,48 +79,64 @@ async def crawl(url, extraction_type="markdown", js_code=None, css_selector=None
         # Create crawler and run
         with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
             async with AsyncWebCrawler(config=browser_config) as crawler:
-                if deep_crawl and deep_config:
-                    # Deep crawl - returns list of results
-                    results = await crawler.arun_many(
-                        [url],
-                        config=run_config,
-                        deep_config=deep_config
+                if deep_crawl and crawl_strategy_obj:
+                    # Deep crawl - use strategy's own arun method
+                    # This returns a list of CrawlResult objects directly
+                    crawled_results = await crawl_strategy_obj.arun(
+                        start_url=url,
+                        crawler=crawler,
+                        config=run_config
                     )
-                    result = results  # Keep all results
                 else:
                     # Single page crawl
                     result = await crawler.arun(
                         url=url,
                         config=run_config
                     )
+                    crawled_results = None
         
         # Process result based on extraction type (outside redirect blocks)
         if extraction_type == "markdown":
-            # Handle deep crawl results (list of pages)
-            if deep_crawl and isinstance(result, list):
-                pages = []
-                total_words = 0
-                
-                for page_result in result:
-                    content = page_result.markdown
-                    word_count = len(content.split()) if content else 0
-                    total_words += word_count
+            # Handle deep crawl results
+            if deep_crawl:
+                if crawled_results and len(crawled_results) > 0:
+                    pages = []
+                    total_words = 0
                     
-                    pages.append({
-                        "url": page_result.url,
-                        "content": content,
-                        "wordCount": word_count,
-                        "title": page_result.title if hasattr(page_result, 'title') else ""
-                    })
-                
-                return {
-                    "success": True,
-                    "deepCrawl": True,
-                    "pages": pages,
-                    "totalPages": len(pages),
-                    "totalWords": total_words,
-                    "status": "completed"
-                }
+                    # Process each crawled page
+                    for page_result in crawled_results:
+                        content = page_result.markdown if hasattr(page_result, 'markdown') else ""
+                        word_count = len(content.split()) if content else 0
+                        total_words += word_count
+                        
+                        # Extract title from metadata or URL
+                        title = ""
+                        if hasattr(page_result, 'metadata') and page_result.metadata:
+                            title = page_result.metadata.get('title', '')
+                        if not title and hasattr(page_result, 'url'):
+                            # Use last part of URL as title
+                            title = page_result.url.split('/')[-1] or page_result.url
+                        
+                        pages.append({
+                            "url": page_result.url if hasattr(page_result, 'url') else "Unknown",
+                            "content": content,
+                            "wordCount": word_count,
+                            "title": title or f"Page {len(pages) + 1}"
+                        })
+                    
+                    return {
+                        "success": True,
+                        "deepCrawl": True,
+                        "pages": pages,
+                        "totalPages": len(pages),
+                        "totalWords": total_words,
+                        "status": "completed"
+                    }
+                else:
+                    return {
+                        "success": False,
+                        "error": "Deep crawl found no pages. Try adjusting max_pages or check URL."
+                    }
             else:
                 # Single page result
                 content = result.markdown
@@ -129,10 +150,14 @@ async def crawl(url, extraction_type="markdown", js_code=None, css_selector=None
                 }
             
         elif extraction_type == "css":
-            # For CSS extraction, return the HTML for now
-            # You can implement custom CSS extraction logic here
-            content = result.markdown
+            # CSS extraction only works with single page for now
+            if deep_crawl:
+                return {
+                    "success": False,
+                    "error": "CSS extraction not yet supported with deep crawl"
+                }
             
+            content = result.markdown
             return {
                 "success": True,
                 "content": content,
@@ -141,10 +166,14 @@ async def crawl(url, extraction_type="markdown", js_code=None, css_selector=None
             }
             
         elif extraction_type == "llm":
-            # For LLM extraction, you would use LLMExtractionStrategy
-            # This is a placeholder showing the structure
-            content = result.markdown
+            # LLM extraction only works with single page for now
+            if deep_crawl:
+                return {
+                    "success": False,
+                    "error": "LLM extraction not yet supported with deep crawl"
+                }
             
+            content = result.markdown
             return {
                 "success": True,
                 "content": content,
