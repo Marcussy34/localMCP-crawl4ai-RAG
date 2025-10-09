@@ -34,20 +34,25 @@ Open [http://localhost:3000](http://localhost:3000) to see the interface.
 
 ## ✨ Current Status
 
-### ✅ Completed (Frontend)
+### ✅ Completed
 - [x] Modern UI with shadcn/ui components
 - [x] Multiple extraction strategy options
 - [x] Configuration forms and inputs
 - [x] Results display with copy functionality
-- [x] Mock API endpoint for testing
+- [x] **Crawl4AI Python backend integrated**
+- [x] **Markdown extraction working**
 - [x] Responsive design with dark mode
+- [x] Inter font typography
 
-### ⏳ Pending (Backend Integration)
-- [ ] Connect to actual Crawl4AI Python backend
-- [ ] Implement real-time streaming
-- [ ] Add WebSocket support for long-running crawls
-- [ ] Set up proper error handling
-- [ ] Add crawl history and presets
+### 🚀 Ready to Use
+The application is fully functional! Start crawling websites now.
+
+### 🔨 Enhancements Available
+- [ ] CSS selector extraction (framework ready)
+- [ ] LLM extraction with AI (add API keys)
+- [ ] Real-time streaming for large pages
+- [ ] Crawl history and presets
+- [ ] Export functionality
 
 ## 🎨 Features
 
@@ -114,28 +119,23 @@ crawl4ai_test/
 
 ## 🔌 API Integration
 
-### Current Mock API
-The frontend currently uses a mock API endpoint at `/api/crawl` that simulates Crawl4AI responses.
+### ✅ Integration Complete!
 
-### Integration Options
+The app is now fully integrated with Crawl4AI:
 
-#### Option 1: Python Backend (Recommended)
-```bash
-# 1. Install Crawl4AI
-pip install -U crawl4ai
-crawl4ai-setup
+1. **Python Backend** (`crawl_backend.py`) - Handles actual crawling
+2. **Next.js API** (`/api/crawl`) - Bridges frontend to Python  
+3. **Virtual Environment** - Isolated Python dependencies
 
-# 2. Create FastAPI/Flask server
-# 3. Connect to Next.js API routes
+### How It Works
+
+```
+Frontend → Next.js API → Python Backend → Crawl4AI → Results
 ```
 
-#### Option 2: Serverless Functions
-- Deploy Crawl4AI as serverless functions
-- Use Vercel/AWS Lambda with Python runtime
+The Next.js API spawns a Python process for each crawl request, ensuring clean isolation and proper resource management.
 
-#### Option 3: Direct CLI Integration
-- Use Next.js API routes to spawn Python processes
-- Execute Crawl4AI CLI commands directly
+See [INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md) for detailed documentation.
 
 ## 📖 Usage Examples
 
@@ -245,6 +245,12 @@ This project is built for testing Crawl4AI. See the main [Crawl4AI repository](h
 
 ---
 
-**Status:** ✅ Frontend Complete | ⏳ Backend Integration Ready
+**Status:** ✅ Fully Integrated & Working | 🚀 Ready to Crawl
 
 Built with ❤️ for the Crawl4AI community
+
+## 📖 Documentation
+
+- **[INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md)** - Complete integration documentation
+- **[Crawl4AI Docs](https://docs.crawl4ai.com)** - Official documentation
+- **[GitHub Issues](https://github.com/unclecode/crawl4ai/issues)** - Report issues

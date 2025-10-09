@@ -1,5 +1,8 @@
-// API endpoint for Crawl4AI testing
-// This endpoint will handle crawl requests from the frontend
+// API endpoint for Crawl4AI
+// Connects the frontend to the Python Crawl4AI backend
+
+import { spawn } from 'child_process';
+import path from 'path';
 
 export default async function handler(req, res) {
   // Only allow POST requests
@@ -18,44 +21,68 @@ export default async function handler(req, res) {
     // Start timing
     const startTime = Date.now();
 
-    // TODO: Implement actual Crawl4AI integration
-    // For now, return a mock response to test the frontend
-    
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // Path to Python script and venv
+    const projectRoot = process.cwd();
+    const pythonPath = path.join(projectRoot, 'venv', 'bin', 'python3');
+    const scriptPath = path.join(projectRoot, 'crawl_backend.py');
 
-    // Mock response based on extraction type
-    let mockContent;
-    let wordCount = 0;
+    // Prepare input data for Python script
+    const inputData = JSON.stringify({
+      url,
+      extractionType,
+      jsCode,
+      cssSelector,
+      llmPrompt,
+      headless
+    });
 
-    if (extractionType === "markdown") {
-      mockContent = `# Sample Crawled Content\n\nThis is a **mock response** from the Crawl4AI API.\n\n## Features\n- Clean markdown conversion\n- Fast processing\n- LLM-friendly output\n\n### Next Steps\n1. Integrate actual Crawl4AI Python backend\n2. Set up proper API communication\n3. Handle real-time streaming\n\n> This is currently a placeholder. The actual Crawl4AI integration will be added next.`;
-      wordCount = mockContent.split(/\s+/).length;
-    } else if (extractionType === "css") {
-      mockContent = [
-        { selector: cssSelector || ".content", text: "Sample extracted text from CSS selector" },
-        { selector: cssSelector || ".content", text: "Another matched element" }
-      ];
-    } else if (extractionType === "llm") {
-      mockContent = {
-        extracted_data: [
-          { item: "Sample Product 1", price: "$99.99" },
-          { item: "Sample Product 2", price: "$149.99" }
-        ],
-        prompt_used: llmPrompt,
-        note: "This is mock LLM extracted data"
-      };
-    }
+    // Call Python backend
+    const result = await new Promise((resolve, reject) => {
+      const python = spawn(pythonPath, [scriptPath]);
+      
+      let stdoutData = '';
+      let stderrData = '';
+
+      // Collect stdout
+      python.stdout.on('data', (data) => {
+        stdoutData += data.toString();
+      });
+
+      // Collect stderr
+      python.stderr.on('data', (data) => {
+        stderrData += data.toString();
+      });
+
+      // Handle process completion
+      python.on('close', (code) => {
+        if (code !== 0) {
+          reject(new Error(`Python process exited with code ${code}: ${stderrData}`));
+        } else {
+          try {
+            const parsedResult = JSON.parse(stdoutData);
+            resolve(parsedResult);
+          } catch (e) {
+            reject(new Error(`Failed to parse Python output: ${e.message}`));
+          }
+        }
+      });
+
+      // Handle errors
+      python.on('error', (error) => {
+        reject(new Error(`Failed to start Python process: ${error.message}`));
+      });
+
+      // Send input data to Python script
+      python.stdin.write(inputData);
+      python.stdin.end();
+    });
 
     // Calculate timing
     const timing = Date.now() - startTime;
 
-    // Return successful response
-    return res.status(200).json({
-      success: true,
-      status: "completed",
-      content: mockContent,
-      wordCount,
+    // Add timing and config to result
+    const response = {
+      ...result,
       timing,
       config: {
         url,
@@ -65,7 +92,10 @@ export default async function handler(req, res) {
         hasCssSelector: !!cssSelector,
         hasLlmPrompt: !!llmPrompt
       }
-    });
+    };
+
+    // Return successful response
+    return res.status(200).json(response);
 
   } catch (error) {
     console.error("Crawl error:", error);
@@ -75,4 +105,3 @@ export default async function handler(req, res) {
     });
   }
 }
-
