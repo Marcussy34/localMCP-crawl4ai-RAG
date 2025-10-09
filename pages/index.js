@@ -126,15 +126,24 @@ export default function Home() {
             {/* Conditional Configuration Tabs */}
             <Tabs defaultValue="basic" className="w-full">
               <TabsList className="grid w-full grid-cols-3 bg-gray-100 dark:bg-gray-800">
-                <TabsTrigger value="basic" className="text-gray-700 dark:text-gray-300 data-[state=active]:text-gray-900 dark:data-[state=active]:text-gray-50">
+                <TabsTrigger 
+                  value="basic" 
+                  className="text-gray-700 dark:text-gray-400 data-[state=active]:bg-gray-900 dark:data-[state=active]:bg-gray-100 data-[state=active]:text-white dark:data-[state=active]:text-gray-900"
+                >
                   <Settings className="w-4 h-4 mr-2" />
                   Basic
                 </TabsTrigger>
-                <TabsTrigger value="advanced" className="text-gray-700 dark:text-gray-300 data-[state=active]:text-gray-900 dark:data-[state=active]:text-gray-50">
+                <TabsTrigger 
+                  value="advanced" 
+                  className="text-gray-700 dark:text-gray-400 data-[state=active]:bg-gray-900 dark:data-[state=active]:bg-gray-100 data-[state=active]:text-white dark:data-[state=active]:text-gray-900"
+                >
                   <Code className="w-4 h-4 mr-2" />
                   Advanced
                 </TabsTrigger>
-                <TabsTrigger value="extraction" className="text-gray-700 dark:text-gray-300 data-[state=active]:text-gray-900 dark:data-[state=active]:text-gray-50">
+                <TabsTrigger 
+                  value="extraction" 
+                  className="text-gray-700 dark:text-gray-400 data-[state=active]:bg-gray-900 dark:data-[state=active]:bg-gray-100 data-[state=active]:text-white dark:data-[state=active]:text-gray-900"
+                >
                   Extraction
                 </TabsTrigger>
               </TabsList>
