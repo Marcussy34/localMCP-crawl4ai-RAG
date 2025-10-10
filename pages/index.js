@@ -829,8 +829,8 @@ export default function Home() {
 
         {/* Delete Confirmation Dialog */}
         {deleteDialogOpen && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <Card className="max-w-md w-full">
+          <div className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 overflow-y-auto">
+            <Card className="max-w-md w-full shadow-2xl relative">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
                   <AlertCircle className="w-5 h-5" />
@@ -857,8 +857,8 @@ export default function Home() {
                       setDeleteDialogOpen(false);
                       setSourceToDelete(null);
                     }}
-                    variant="outline"
-                    className="flex-1"
+                    variant="secondary"
+                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-900 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100 border border-gray-300 dark:border-gray-600"
                     disabled={deleting}
                   >
                     <X className="w-4 h-4 mr-2" />
