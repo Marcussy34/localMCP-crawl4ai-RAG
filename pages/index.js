@@ -173,6 +173,19 @@ export default function Home() {
     setDeleteDialogOpen(true);
   };
 
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (deleteDialogOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [deleteDialogOpen]);
+
   // Toggle source expansion and load pages if needed
   const toggleSourceExpansion = async (sourceName) => {
     const isExpanded = expandedSources[sourceName];
@@ -829,8 +842,8 @@ export default function Home() {
 
         {/* Delete Confirmation Dialog */}
         {deleteDialogOpen && (
-          <div className="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 overflow-y-auto">
-            <Card className="max-w-md w-full shadow-2xl relative">
+          <div className="fixed top-0 left-0 right-0 bottom-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 min-h-screen w-full">
+            <Card className="max-w-md w-full shadow-2xl relative my-auto">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
                   <AlertCircle className="w-5 h-5" />
