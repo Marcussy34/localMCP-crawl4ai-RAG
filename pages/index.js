@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, BookOpen, Search, Info, FileText, ExternalLink, Copy, Check, Database, Layers, Clock, AlertCircle, Plus, Filter, Trash2, Eye, X, ChevronDown, ChevronRight } from "lucide-react";
+import { Loader2, BookOpen, Search, Info, FileText, ExternalLink, Copy, Check, Database, Layers, Clock, AlertCircle, Plus, Filter, Trash2, Eye, X, ChevronDown, ChevronRight, ChevronLeft } from "lucide-react";
 
 export default function Home() {
   // State management
@@ -26,6 +26,8 @@ export default function Home() {
   const [sourcePages, setSourcePages] = useState({});
   const [loadingPages, setLoadingPages] = useState({});
   const [expandedPages, setExpandedPages] = useState({});
+  const [pageNumbers, setPageNumbers] = useState({});
+  const PAGES_PER_PAGE = 10;
 
   // Load index info on mount
   useEffect(() => {
@@ -166,7 +168,12 @@ export default function Home() {
 
     // If expanding and we don't have pages yet, load them
     if (!isExpanded && !sourcePages[sourceName]) {
+      // Reset to page 1 when expanding
+      setCurrentPage(sourceName, 1);
       await loadSourcePages(sourceName);
+    } else if (!isExpanded) {
+      // Reset to page 1 when re-expanding
+      setCurrentPage(sourceName, 1);
     }
   };
 
@@ -210,6 +217,35 @@ export default function Home() {
       ...prev,
       [key]: !prev[key]
     }));
+  };
+
+  // Get current page number for a source
+  const getCurrentPage = (sourceName) => {
+    return pageNumbers[sourceName] || 1;
+  };
+
+  // Set page number for a source
+  const setCurrentPage = (sourceName, pageNum) => {
+    setPageNumbers(prev => ({
+      ...prev,
+      [sourceName]: pageNum
+    }));
+  };
+
+  // Get paginated pages for a source
+  const getPaginatedPages = (sourceName) => {
+    const pages = sourcePages[sourceName] || [];
+    const currentPage = getCurrentPage(sourceName);
+    const startIndex = (currentPage - 1) * PAGES_PER_PAGE;
+    const endIndex = startIndex + PAGES_PER_PAGE;
+    return {
+      pages: pages.slice(startIndex, endIndex),
+      totalPages: pages.length,
+      startIndex: startIndex + 1,
+      endIndex: Math.min(endIndex, pages.length),
+      currentPage,
+      totalPaginationPages: Math.ceil(pages.length / PAGES_PER_PAGE)
+    };
   };
 
   return (
@@ -350,8 +386,46 @@ export default function Home() {
                                 Loading pages...
                               </div>
                             ) : sourcePages[source.name] && sourcePages[source.name].length > 0 ? (
-                              <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                                {sourcePages[source.name].map((page, pageIdx) => {
+                              <>
+                                {/* Pagination Info */}
+                                {(() => {
+                                  const paginationData = getPaginatedPages(source.name);
+                                  return (
+                                    <>
+                                      <div className="p-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30">
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-xs text-gray-600 dark:text-gray-400">
+                                            Showing {paginationData.startIndex}-{paginationData.endIndex} of {paginationData.totalPages} pages
+                                          </span>
+                                          {paginationData.totalPaginationPages > 1 && (
+                                            <div className="flex items-center gap-2">
+                                              <Button
+                                                size="sm"
+                                                variant="secondary"
+                                                className="h-7 px-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100"
+                                                onClick={() => setCurrentPage(source.name, paginationData.currentPage - 1)}
+                                                disabled={paginationData.currentPage === 1}
+                                              >
+                                                <ChevronLeft className="w-3 h-3" />
+                                              </Button>
+                                              <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                                                Page {paginationData.currentPage} of {paginationData.totalPaginationPages}
+                                              </span>
+                                              <Button
+                                                size="sm"
+                                                variant="secondary"
+                                                className="h-7 px-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100"
+                                                onClick={() => setCurrentPage(source.name, paginationData.currentPage + 1)}
+                                                disabled={paginationData.currentPage === paginationData.totalPaginationPages}
+                                              >
+                                                <ChevronRight className="w-3 h-3" />
+                                              </Button>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                                        {paginationData.pages.map((page, pageIdx) => {
                                   const pageKey = `${source.name}:${page.url}`;
                                   const isPageExpanded = expandedPages[pageKey];
                                   
@@ -384,11 +458,11 @@ export default function Home() {
                                             <ExternalLink className="w-2 h-2" />
                                           </a>
                                         </div>
-                                        <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                                          <Badge variant="outline" className="text-xs">
+                                        <div className="flex items-center gap-2 text-xs">
+                                          <Badge className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 border-blue-200 dark:border-blue-800">
                                             {page.chunkCount} chunks
                                           </Badge>
-                                          <span>{page.totalWords} words</span>
+                                          <span className="text-gray-700 dark:text-gray-300 font-medium">{page.totalWords} words</span>
                                         </div>
                                       </div>
 
@@ -404,7 +478,7 @@ export default function Home() {
                                                 <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
                                                   Chunk {chunk.chunkIndex + 1}
                                                 </span>
-                                                <Badge variant="secondary" className="text-xs">
+                                                <Badge className="text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-200 dark:border-green-800">
                                                   {chunk.wordCount} words
                                                 </Badge>
                                               </div>
@@ -420,8 +494,12 @@ export default function Home() {
                                       )}
                                     </div>
                                   );
-                                })}
-                              </div>
+                                        })}
+                                      </div>
+                                    </>
+                                  );
+                                })()}
+                              </>
                             ) : (
                               <div className="p-4 text-center text-sm text-gray-600 dark:text-gray-400">
                                 No pages found
