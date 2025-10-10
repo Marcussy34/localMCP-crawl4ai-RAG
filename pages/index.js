@@ -327,14 +327,18 @@ export default function Home() {
                         className="bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700"
                       >
                         {/* Source Header */}
-                        <div className="p-3">
+                        <div 
+                          className="p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors"
+                          onClick={() => toggleSourceExpansion(source.name)}
+                        >
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex-1 space-y-1">
                               <a
                                 href={source.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                                className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 w-fit"
+                                onClick={(e) => e.stopPropagation()}
                               >
                                 {source.name}
                                 <ExternalLink className="w-3 h-3" />
@@ -351,24 +355,21 @@ export default function Home() {
                               <Badge variant="secondary" className="text-xs">
                                 {source.indexedAt ? new Date(source.indexedAt).toLocaleDateString() : "N/A"}
                               </Badge>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                                onClick={() => toggleSourceExpansion(source.name)}
-                                title="View pages"
-                              >
+                              <div className="text-blue-600 dark:text-blue-400">
                                 {expandedSources[source.name] ? (
                                   <ChevronDown className="w-4 h-4" />
                                 ) : (
                                   <ChevronRight className="w-4 h-4" />
                                 )}
-                              </Button>
+                              </div>
                               <Button
                                 size="sm"
                                 variant="ghost"
                                 className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                onClick={() => confirmDelete(source.name)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  confirmDelete(source.name);
+                                }}
                                 title="Delete source"
                               >
                                 <Trash2 className="w-4 h-4" />
