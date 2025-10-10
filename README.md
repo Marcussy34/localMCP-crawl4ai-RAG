@@ -388,4 +388,4 @@ This project is open source. Crawl4AI is licensed under Apache 2.0.
 
 **Status**: ✅ Fully Operational | 🤖 MCP Server Ready | 🔍 Search Enabled
 
-Built with ❤️ to make documentation accessible to AI assistants
+
