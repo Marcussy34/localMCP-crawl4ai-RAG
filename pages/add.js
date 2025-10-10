@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Head from "next/head";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -107,9 +108,15 @@ export default function AddDocumentation() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
+    <>
+      <Head>
+        <title>Add Documentation - Marcus Local MCP Server</title>
+        <meta name="description" content="Add new documentation sources to your MCP server" />
+      </Head>
+      
+      <div className="min-h-screen bg-white dark:bg-gray-900 p-6">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {/* Header */}
         <div className="text-center space-y-2">
           <div className="mb-4">
             <a
@@ -503,6 +510,7 @@ export default function AddDocumentation() {
         </div>
       </div>
     </div>
+    </>
   );
 }
 

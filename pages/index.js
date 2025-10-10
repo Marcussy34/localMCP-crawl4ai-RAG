@@ -211,9 +211,8 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Marcus MCP Server</title>
-        <meta name="description" content="Context for AI to retrieve." />
-        <link rel="icon" href="/favicon.ico" />
+        <title>Marcus Local MCP Server</title>
+        <meta name="description" content="Context for AI to retrieve - Semantic search over indexed documentation" />
       </Head>
       
     <div className="min-h-screen bg-white dark:bg-gray-900 p-6">
