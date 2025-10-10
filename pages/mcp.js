@@ -5,12 +5,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, BookOpen, Search, Info, FileText, ExternalLink, Copy, Check, Database, Layers, Clock, AlertCircle, Plus } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, BookOpen, Search, Info, FileText, ExternalLink, Copy, Check, Database, Layers, Clock, AlertCircle, Plus, Filter } from "lucide-react";
 
 export default function MCPDocsServer() {
   // State management
   const [query, setQuery] = useState("");
   const [maxResults, setMaxResults] = useState(5);
+  const [selectedSource, setSelectedSource] = useState("all");
   const [loading, setLoading] = useState(false);
   const [searchResults, setSearchResults] = useState(null);
   const [indexInfo, setIndexInfo] = useState(null);
@@ -62,6 +64,7 @@ export default function MCPDocsServer() {
         body: JSON.stringify({
           query: query.trim(),
           maxResults: maxResults,
+          sourceFilter: selectedSource !== "all" ? selectedSource : null,
         }),
       });
 
@@ -279,6 +282,37 @@ export default function MCPDocsServer() {
               </p>
             </div>
 
+            {/* Source Filter */}
+            {indexInfo && indexInfo.sources && indexInfo.sources.length > 1 && (
+              <div className="space-y-2">
+                <Label htmlFor="source-filter" className="text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                  <Filter className="w-4 h-4" />
+                  Filter by Source
+                </Label>
+                <Select value={selectedSource} onValueChange={setSelectedSource}>
+                  <SelectTrigger id="source-filter">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      🌐 All Sources ({indexInfo.sources.length})
+                    </SelectItem>
+                    {indexInfo.sources.map((source, index) => (
+                      <SelectItem key={index} value={source.name}>
+                        📚 {source.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-600 dark:text-gray-400">
+                  {selectedSource === "all" 
+                    ? "Searching across all documentation sources"
+                    : `Only searching in ${selectedSource} documentation`
+                  }
+                </p>
+              </div>
+            )}
+
             {/* Max Results */}
             <div className="space-y-2">
               <Label htmlFor="max-results" className="text-gray-900 dark:text-gray-100">
@@ -382,6 +416,11 @@ export default function MCPDocsServer() {
               </div>
               <CardDescription>
                 Query: "{searchResults.query}"
+                {selectedSource !== "all" && (
+                  <span className="ml-2 text-blue-600 dark:text-blue-400">
+                    • Filtered by: {selectedSource}
+                  </span>
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent>

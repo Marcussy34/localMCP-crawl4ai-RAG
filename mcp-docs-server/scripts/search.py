@@ -19,13 +19,14 @@ from openai import OpenAI
 # Load environment
 load_dotenv()
 
-def search_docs(query: str, max_results: int = 5):
+def search_docs(query: str, max_results: int = 5, source_filter: str = None):
     """
     Search documentation using semantic search
     
     Args:
         query: Search query
         max_results: Maximum number of results
+        source_filter: Optional source name to filter results
         
     Returns:
         JSON string with search results
@@ -50,11 +51,17 @@ def search_docs(query: str, max_results: int = 5):
         )
         query_embedding = response.data[0].embedding
         
-        # Search
-        results = collection.query(
-            query_embeddings=[query_embedding],
-            n_results=max_results
-        )
+        # Search with optional source filter
+        search_params = {
+            "query_embeddings": [query_embedding],
+            "n_results": max_results
+        }
+        
+        # Add source filter if specified
+        if source_filter:
+            search_params["where"] = {"source_name": source_filter}
+        
+        results = collection.query(**search_params)
         
         # Format results
         formatted_results = []
@@ -95,12 +102,13 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print(json.dumps({
             'success': False,
-            'error': 'Usage: search.py <query> [max_results]'
+            'error': 'Usage: search.py <query> [max_results] [source_filter]'
         }))
         sys.exit(1)
     
     query = sys.argv[1]
     max_results = int(sys.argv[2]) if len(sys.argv) > 2 else 5
+    source_filter = sys.argv[3] if len(sys.argv) > 3 else None
     
-    sys.exit(search_docs(query, max_results))
+    sys.exit(search_docs(query, max_results, source_filter))
 

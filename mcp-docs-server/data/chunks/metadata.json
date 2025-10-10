@@ -1,23 +1,29 @@
 {
-  "total_pages": 72,
-  "total_chunks": 57,
-  "total_words": 13110,
-  "source": "https://docs.moca.network/",
-  "indexed_at": "2025-10-10T02:42:59.971578Z",
-  "embedding_model": "text-embedding-3-small",
-  "chunk_size": 800,
-  "chunk_overlap": 100,
   "sources": [
+    {
+      "name": "Moca Network",
+      "url": "https://docs.moca.network/",
+      "pages": 72,
+      "chunks": 237,
+      "words": 47452,
+      "indexed_at": "2025-10-10T03:33:43.813526Z",
+      "file": "moca_network_docs.json"
+    },
     {
       "name": "Solana",
       "url": "https://solana.com/docs",
       "pages": 10,
       "chunks": 57,
       "words": 13110,
-      "indexed_at": "2025-10-10T03:15:41.924532Z",
+      "indexed_at": "2025-10-10T03:39:13.202435Z",
       "file": "solana_docs.json"
     }
   ],
-  "total_sources": 1,
-  "last_updated": "2025-10-10T03:15:41.924553Z"
+  "total_chunks": 294,
+  "total_words": 60562,
+  "total_sources": 2,
+  "embedding_model": "text-embedding-3-small",
+  "chunk_size": 800,
+  "chunk_overlap": 100,
+  "last_updated": "2025-10-10T03:39:13.202642Z"
 }

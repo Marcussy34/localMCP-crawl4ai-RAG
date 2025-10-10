@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { query, maxResults = 5 } = req.body;
+  const { query, maxResults = 5, sourceFilter = null } = req.body;
 
   if (!query || typeof query !== 'string') {
     return res.status(400).json({ error: 'Query is required' });
@@ -42,11 +42,18 @@ export default async function handler(req, res) {
 
     // Execute Python search script
     const result = await new Promise((resolve, reject) => {
-      const process = spawn(pythonPath, [
+      const args = [
         searchScriptPath,
         query,
         maxResults.toString()
-      ]);
+      ];
+      
+      // Add source filter if provided
+      if (sourceFilter) {
+        args.push(sourceFilter);
+      }
+      
+      const process = spawn(pythonPath, args);
 
       let stdout = '';
       let stderr = '';
