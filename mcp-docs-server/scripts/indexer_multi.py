@@ -134,6 +134,14 @@ class MultiDocIndexer:
         )
         return response.data[0].embedding
     
+    def create_embeddings_batch(self, texts: List[str]) -> List[List[float]]:
+        """Create embeddings for multiple texts in one API call (much faster!)"""
+        response = self.openai_client.embeddings.create(
+            model=self.embedding_model,
+            input=texts
+        )
+        return [item.embedding for item in response.data]
+    
     def index_documents(self, docs_file: str, source_name: str = None):
         """
         Index documentation from JSON file
@@ -182,15 +190,17 @@ class MultiDocIndexer:
                 print(f"  ⚠️  Could not remove old chunks: {e}")
         
         all_chunks = []
-        all_embeddings = []
         all_metadatas = []
         all_ids = []
         
         # Generate unique prefix for this indexing session
         session_prefix = source_name.replace(".", "_").replace("-", "_")[:20]
         
+        # First pass: collect all chunks
+        print("📝 Creating chunks from all pages...")
         for page_idx, page in enumerate(pages):
-            print(f"Processing page {page_idx + 1}/{total_pages}: {page['title'][:60]}...")
+            if page_idx % 10 == 0:
+                print(f"  Processing page {page_idx + 1}/{total_pages}...")
             
             # Create chunks for this page
             chunks = self.chunk_text(
@@ -205,21 +215,30 @@ class MultiDocIndexer:
                 }
             )
             
-            # Create embeddings for each chunk
+            # Collect chunks
             for chunk_idx, chunk in enumerate(chunks):
                 chunk_id = f"{session_prefix}_page_{page_idx}_chunk_{chunk_idx}"
                 
-                # Create embedding
-                embedding = self.create_embedding(chunk["text"])
-                
                 all_chunks.append(chunk["text"])
-                all_embeddings.append(embedding)
                 all_metadatas.append(chunk["metadata"])
                 all_ids.append(chunk_id)
-                
-                # Progress indicator
-                if len(all_chunks) % 10 == 0:
-                    print(f"  ✓ Embedded {len(all_chunks)} chunks so far...")
+        
+        print(f"✅ Created {len(all_chunks)} chunks from {total_pages} pages")
+        
+        # Second pass: create embeddings in batches (MUCH FASTER!)
+        print(f"\n🚀 Creating embeddings in batches (this is much faster)...")
+        all_embeddings = []
+        batch_size = 100  # OpenAI supports up to 2048, but 100 is safer
+        
+        for i in range(0, len(all_chunks), batch_size):
+            end_idx = min(i + batch_size, len(all_chunks))
+            batch_texts = all_chunks[i:end_idx]
+            
+            # Create embeddings for this batch
+            batch_embeddings = self.create_embeddings_batch(batch_texts)
+            all_embeddings.extend(batch_embeddings)
+            
+            print(f"  ✓ Embedded {len(all_embeddings)}/{len(all_chunks)} chunks ({(len(all_embeddings)/len(all_chunks)*100):.1f}%)")
         
         # Store in ChromaDB
         print(f"\n💾 Storing {len(all_chunks)} chunks in ChromaDB...")

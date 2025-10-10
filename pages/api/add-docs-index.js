@@ -71,11 +71,11 @@ export default async function handler(req, res) {
         stderr += data.toString();
       });
 
-      // Set timeout (15 minutes for large indexes)
+      // Set timeout (45 minutes for large indexes)
       const timeout = setTimeout(() => {
         indexerProcess.kill();
-        reject(new Error('Indexing timeout (15 minutes exceeded)'));
-      }, 15 * 60 * 1000);
+        reject(new Error('Indexing timeout (45 minutes exceeded)'));
+      }, 45 * 60 * 1000);
 
       indexerProcess.on('close', (code) => {
         clearTimeout(timeout);
@@ -145,6 +145,7 @@ export default async function handler(req, res) {
 }
 
 // Increase timeout for large indexes
+// Note: This config is for Vercel deployments. For local dev, the setTimeout handles timeout.
 export const config = {
   api: {
     responseLimit: false,
@@ -152,6 +153,6 @@ export const config = {
       sizeLimit: '10mb',
     },
   },
-  maxDuration: 300, // 5 minutes API timeout
+  maxDuration: 300, // 5 minutes API timeout (Vercel limit, ignored in local dev)
 };
 
