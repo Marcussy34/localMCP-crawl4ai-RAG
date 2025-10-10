@@ -12,18 +12,18 @@
     {
       "name": "Solana",
       "url": "https://solana.com/docs",
-      "pages": 10,
-      "chunks": 57,
-      "words": 13110,
-      "indexed_at": "2025-10-10T03:39:13.202435Z",
+      "pages": 5,
+      "chunks": 27,
+      "words": 5572,
+      "indexed_at": "2025-10-10T06:32:33.270969Z",
       "file": "solana_docs.json"
     }
   ],
-  "total_chunks": 294,
-  "total_words": 60562,
+  "total_chunks": 264,
+  "total_words": 53024,
   "total_sources": 2,
   "embedding_model": "text-embedding-3-small",
   "chunk_size": 800,
   "chunk_overlap": 100,
-  "last_updated": "2025-10-10T03:39:13.202642Z"
+  "last_updated": "2025-10-10T06:32:33.271019Z"
 }

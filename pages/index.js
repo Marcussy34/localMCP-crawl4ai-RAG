@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Head from "next/head";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, BookOpen, Search, Info, FileText, ExternalLink, Copy, Check, Database, Layers, Clock, AlertCircle, Plus, Filter, Trash2, Eye, X, ChevronDown, ChevronRight, ChevronLeft } from "lucide-react";
+import { Loader2, BookOpen, Search, Info, FileText, ExternalLink, Copy, Check, Database, Layers, Clock, AlertCircle, Plus, Filter, Trash2, Eye, X, ChevronDown, ChevronRight, ChevronLeft, BookMarked, Sun, Moon } from "lucide-react";
 
 export default function Home() {
   // State management
@@ -27,7 +28,23 @@ export default function Home() {
   const [loadingPages, setLoadingPages] = useState({});
   const [expandedPages, setExpandedPages] = useState({});
   const [pageNumbers, setPageNumbers] = useState({});
+  const [theme, setTheme] = useState('light');
   const PAGES_PER_PAGE = 10;
+
+  // Load theme from localStorage on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme);
+    document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+  }, []);
+
+  // Toggle theme
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.documentElement.classList.toggle('dark', newTheme === 'dark');
+  };
 
   // Load index info on mount
   useEffect(() => {
@@ -249,7 +266,14 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
+    <>
+      <Head>
+        <title>Marcus's Documentation Server</title>
+        <meta name="description" content="Semantic search across indexed documentation sources" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+      
+    <div className="min-h-screen bg-white dark:bg-gray-900 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
@@ -262,11 +286,14 @@ export default function Home() {
               Add New Docs
             </a>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
-            📚 MCP Documentation Server
-          </h1>
+          <div className="flex items-center justify-center gap-3">
+            <BookMarked className="w-10 h-10 text-gray-900 dark:text-gray-100" />
+            <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
+              Marcus's Documentation Server
+            </h1>
+          </div>
           <p className="text-gray-600 dark:text-gray-400">
-            Search through indexed documentation with semantic search
+            Semantic search across indexed documentation sources
           </p>
         </div>
 
@@ -355,7 +382,7 @@ export default function Home() {
                               <Badge variant="secondary" className="text-xs">
                                 {source.indexedAt ? new Date(source.indexedAt).toLocaleDateString() : "N/A"}
                               </Badge>
-                              <div className="text-blue-600 dark:text-blue-400">
+                              <div className="text-gray-600 dark:text-gray-400">
                                 {expandedSources[source.name] ? (
                                   <ChevronDown className="w-4 h-4" />
                                 ) : (
@@ -365,7 +392,7 @@ export default function Home() {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                className="h-8 w-8 p-0 text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   confirmDelete(source.name);
@@ -460,7 +487,7 @@ export default function Home() {
                                           </a>
                                         </div>
                                         <div className="flex items-center gap-2 text-xs">
-                                          <Badge className="text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 border-blue-200 dark:border-blue-800">
+                                          <Badge className="text-xs bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600">
                                             {page.chunkCount} chunks
                                           </Badge>
                                           <span className="text-gray-700 dark:text-gray-300 font-medium">{page.totalWords} words</span>
@@ -479,7 +506,7 @@ export default function Home() {
                                                 <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
                                                   Chunk {chunk.chunkIndex + 1}
                                                 </span>
-                                                <Badge className="text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-200 dark:border-green-800">
+                                                <Badge className="text-xs bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-600">
                                                   {chunk.wordCount} words
                                                 </Badge>
                                               </div>
@@ -663,14 +690,14 @@ export default function Home() {
         {error && (
           <Card>
             <CardContent className="pt-6">
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+              <div className="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-4">
                 <div className="flex items-start gap-2">
-                  <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
+                  <AlertCircle className="w-5 h-5 text-gray-700 dark:text-gray-300 mt-0.5" />
                   <div>
-                    <p className="text-red-800 dark:text-red-200 font-medium">
+                    <p className="text-gray-900 dark:text-gray-100 font-medium">
                       Error
                     </p>
-                    <p className="text-red-700 dark:text-red-300 text-sm mt-1">
+                    <p className="text-gray-700 dark:text-gray-300 text-sm mt-1">
                       {error}
                     </p>
                   </div>
@@ -696,7 +723,7 @@ export default function Home() {
               <CardDescription>
                 Query: "{searchResults.query}"
                 {selectedSource !== "all" && (
-                  <span className="ml-2 text-blue-600 dark:text-blue-400">
+                  <span className="ml-2 text-gray-700 dark:text-gray-300">
                     • Filtered by: {selectedSource}
                       </span>
                 )}
@@ -805,7 +832,7 @@ export default function Home() {
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <Card className="max-w-md w-full">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
+                <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
                   <AlertCircle className="w-5 h-5" />
                   Confirm Deletion
                 </CardTitle>
@@ -814,11 +841,11 @@ export default function Home() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
-                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                <div className="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-3">
+                  <p className="text-sm text-gray-900 dark:text-gray-100">
                     Are you sure you want to delete <strong>{sourceToDelete}</strong>?
                   </p>
-                  <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-2">
+                  <p className="text-xs text-gray-700 dark:text-gray-300 mt-2">
                     This will remove all {indexInfo?.sources?.find(s => s.name === sourceToDelete)?.chunks} chunks
                     from the search index.
                   </p>
@@ -839,7 +866,7 @@ export default function Home() {
                   </Button>
                   <Button
                     onClick={handleDeleteSource}
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                    className="flex-1 bg-gray-900 hover:bg-black text-white dark:bg-gray-100 dark:hover:bg-white dark:text-gray-900"
                     disabled={deleting}
                   >
                     {deleting ? (
@@ -862,23 +889,33 @@ export default function Home() {
 
         {/* Footer */}
         <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-          <p>
-            <span className="font-medium">marcus-mcp-server</span>
-            {" • "}
-            Powered by{" "}
+          <p className="flex items-center justify-center gap-2 flex-wrap">
+            <span className="flex items-center gap-1">
+              <Database className="w-3 h-3" />
+              <span className="font-medium">Marcus's MCP Server</span>
+            </span>
+            <span>•</span>
+            <span className="flex items-center gap-1">
+              Powered by
             <a
               href="https://github.com/unclecode/crawl4ai"
             target="_blank"
             rel="noopener noreferrer"
-              className="font-medium underline underline-offset-4 hover:text-gray-900 dark:hover:text-gray-100"
+                className="font-medium underline underline-offset-4 hover:text-gray-900 dark:hover:text-gray-100 flex items-center gap-1"
           >
               Crawl4AI
-          </a>
-            {" • "}
-            OpenAI Embeddings + ChromaDB
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </span>
+            <span>•</span>
+            <span className="flex items-center gap-1">
+              <Layers className="w-3 h-3" />
+              OpenAI + ChromaDB
+            </span>
           </p>
         </div>
       </div>
     </div>
+    </>
   );
 }

@@ -107,7 +107,7 @@ export default function AddDocumentation() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
+    <div className="min-h-screen bg-white dark:bg-gray-900 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
@@ -134,8 +134,8 @@ export default function AddDocumentation() {
               {/* Step 1: Input */}
               <div className="flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  step === "input" ? "bg-blue-600 text-white" :
-                  ["crawling", "indexing", "complete"].includes(step) ? "bg-green-600 text-white" :
+                  step === "input" ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900" :
+                  ["crawling", "indexing", "complete"].includes(step) ? "bg-gray-700 text-white dark:bg-gray-300 dark:text-gray-900" :
                   "bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-300"
                 }`}>
                   {["crawling", "indexing", "complete"].includes(step) ? <CheckCircle className="w-4 h-4" /> : "1"}
@@ -148,8 +148,8 @@ export default function AddDocumentation() {
               {/* Step 2: Crawl */}
               <div className="flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  step === "crawling" ? "bg-blue-600 text-white" :
-                  ["indexing", "complete"].includes(step) ? "bg-green-600 text-white" :
+                  step === "crawling" ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900" :
+                  ["indexing", "complete"].includes(step) ? "bg-gray-700 text-white dark:bg-gray-300 dark:text-gray-900" :
                   "bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-300"
                 }`}>
                   {step === "crawling" ? <Loader2 className="w-4 h-4 animate-spin" /> :
@@ -163,8 +163,8 @@ export default function AddDocumentation() {
               {/* Step 3: Index */}
               <div className="flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  step === "indexing" ? "bg-blue-600 text-white" :
-                  step === "complete" ? "bg-green-600 text-white" :
+                  step === "indexing" ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900" :
+                  step === "complete" ? "bg-gray-700 text-white dark:bg-gray-300 dark:text-gray-900" :
                   "bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-300"
                 }`}>
                   {step === "indexing" ? <Loader2 className="w-4 h-4 animate-spin" /> :
@@ -178,7 +178,7 @@ export default function AddDocumentation() {
               {/* Step 4: Complete */}
               <div className="flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                  step === "complete" ? "bg-green-600 text-white" :
+                  step === "complete" ? "bg-gray-700 text-white dark:bg-gray-300 dark:text-gray-900" :
                   "bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-300"
                 }`}>
                   {step === "complete" ? <CheckCircle className="w-4 h-4" /> : "4"}
@@ -304,7 +304,7 @@ export default function AddDocumentation() {
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-12 h-12 animate-spin text-blue-600" />
+                  <Loader2 className="w-12 h-12 animate-spin text-gray-700 dark:text-gray-300" />
                 </div>
                 <p className="text-center text-sm text-gray-600 dark:text-gray-400">
                   This may take a few minutes depending on the site size...
@@ -319,7 +319,7 @@ export default function AddDocumentation() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
+                <CheckCircle className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                 Crawling Complete
               </CardTitle>
             </CardHeader>
@@ -346,7 +346,7 @@ export default function AddDocumentation() {
               </div>
               
               <div className="flex items-center justify-center py-4">
-                <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+                <Loader2 className="w-8 h-8 animate-spin text-gray-700 dark:text-gray-300" />
               </div>
               <p className="text-center text-sm text-gray-600 dark:text-gray-400">
                 Creating embeddings and storing in vector database...
@@ -360,7 +360,7 @@ export default function AddDocumentation() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
+                <CheckCircle className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                 Successfully Added Documentation!
               </CardTitle>
               <CardDescription>
@@ -425,7 +425,7 @@ export default function AddDocumentation() {
                 <Button
                   onClick={resetForm}
                   variant="secondary"
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white dark:bg-green-600 dark:hover:bg-green-700"
+                  className="flex-1 bg-gray-700 hover:bg-gray-800 text-white dark:bg-gray-300 dark:hover:bg-gray-200 dark:text-gray-900"
                   size="lg"
                 >
                   <Plus className="mr-2 h-4 w-4" />
@@ -440,14 +440,14 @@ export default function AddDocumentation() {
         {step === "error" && error && (
           <Card>
             <CardContent className="pt-6">
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+              <div className="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg p-4">
                 <div className="flex items-start gap-2">
-                  <XCircle className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" />
+                  <XCircle className="w-5 h-5 text-gray-700 dark:text-gray-300 mt-0.5" />
                   <div className="flex-1">
-                    <p className="text-red-800 dark:text-red-200 font-medium">
+                    <p className="text-gray-900 dark:text-gray-100 font-medium">
                       Failed to Add Documentation
                     </p>
-                    <p className="text-red-700 dark:text-red-300 text-sm mt-1">
+                    <p className="text-gray-700 dark:text-gray-300 text-sm mt-1">
                       {error}
                     </p>
                   </div>
@@ -467,13 +467,13 @@ export default function AddDocumentation() {
 
         {/* Info Card */}
         {step === "input" && (
-          <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+          <Card className="bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
             <CardContent className="pt-6">
               <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-                <div className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
+                <AlertCircle className="w-5 h-5 text-gray-700 dark:text-gray-300 mt-0.5 flex-shrink-0" />
+                <div className="space-y-2 text-sm text-gray-900 dark:text-gray-100">
                   <p className="font-medium">Tips for best results:</p>
-                  <ul className="list-disc list-inside space-y-1 text-blue-700 dark:text-blue-300">
+                  <ul className="list-disc list-inside space-y-1 text-gray-700 dark:text-gray-300">
                     <li>Start with 50-100 pages to test</li>
                     <li>Make sure the URL is the root documentation page</li>
                     <li>Use a descriptive source name (it will appear in search results)</li>
