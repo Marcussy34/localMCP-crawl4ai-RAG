@@ -211,8 +211,8 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Marcus's Documentation Server</title>
-        <meta name="description" content="Semantic search across indexed documentation sources" />
+        <title>Marcus MCP Server</title>
+        <meta name="description" content="Context for AI to retrieve." />
         <link rel="icon" href="/favicon.ico" />
       </Head>
       
