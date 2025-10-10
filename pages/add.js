@@ -475,18 +475,30 @@ export default function AddDocumentation() {
         {/* Info Card */}
         {step === "input" && (
           <Card className="bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-gray-700 dark:text-gray-300 mt-0.5 flex-shrink-0" />
-                <div className="space-y-2 text-sm text-gray-900 dark:text-gray-100">
-                  <p className="font-medium">Tips for best results:</p>
-                  <ul className="list-disc list-inside space-y-1 text-gray-700 dark:text-gray-300">
-                    <li>Start with 50-100 pages to test</li>
-                    <li>Make sure the URL is the root documentation page</li>
-                    <li>Use a descriptive source name (it will appear in search results)</li>
-                    <li>Unlimited crawl works best with well-structured sites</li>
-                  </ul>
-                </div>
+            <CardContent className="py-4">
+              <div className="space-y-3">
+                <h3 className="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+                  <AlertCircle className="w-4 h-4 text-gray-700 dark:text-gray-300" />
+                  Tips for best results
+                </h3>
+              <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                <li className="flex items-start gap-3">
+                  <span className="text-gray-500 dark:text-gray-400 mt-0.5">•</span>
+                  <span>Start with 50-100 pages to test</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-gray-500 dark:text-gray-400 mt-0.5">•</span>
+                  <span>Make sure the URL is the root documentation page</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-gray-500 dark:text-gray-400 mt-0.5">•</span>
+                  <span>Use a descriptive source name (it will appear in search results)</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-gray-500 dark:text-gray-400 mt-0.5">•</span>
+                  <span>Unlimited crawl works best with well-structured sites</span>
+                </li>
+              </ul>
               </div>
             </CardContent>
           </Card>
