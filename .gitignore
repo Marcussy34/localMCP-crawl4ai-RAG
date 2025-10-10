@@ -49,3 +49,9 @@ __pycache__/
 .Python
 
 !.env.example
+
+# MCP docs server data (generated indexes and crawled docs)
+mcp-docs-server/data/chroma_db/
+mcp-docs-server/data/raw/
+mcp-docs-server/data/chunks/
+
