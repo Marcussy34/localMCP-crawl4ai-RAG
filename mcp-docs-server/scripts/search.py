@@ -66,6 +66,8 @@ def search_docs(query: str, max_results: int = 5):
                     'content': doc,
                     'metadata': {
                         'wordCount': len(doc.split()),
+                        'source': metadata.get('source', ''),
+                        'source_name': metadata.get('source_name', metadata.get('source', '').replace("https://", "").replace("http://", "").split("/")[0])
                     }
                 })
         

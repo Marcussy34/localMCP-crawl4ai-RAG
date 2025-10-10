@@ -118,28 +118,26 @@ export default function MCPDocsServer() {
         {indexInfo && (
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Database className="w-5 h-5" />
-                Index Information
+              <CardTitle className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Database className="w-5 h-5" />
+                  Index Information
+                </span>
+                {indexInfo.totalSources > 1 && (
+                  <Badge variant="outline" className="text-gray-900 dark:text-gray-100">
+                    {indexInfo.totalSources} Sources
+                  </Badge>
+                )}
               </CardTitle>
               <CardDescription>
-                Currently indexed documentation
+                {indexInfo.totalSources > 1 
+                  ? "Multiple documentation sources indexed"
+                  : "Currently indexed documentation"}
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="space-y-1">
-                  <p className="text-xs text-gray-600 dark:text-gray-400">Source</p>
-                  <a
-                    href={indexInfo.source}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-                  >
-                    {indexInfo.source?.replace("https://", "").replace("http://", "").split("/")[0]}
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
+            <CardContent className="space-y-6">
+              {/* Overall Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 <div className="space-y-1">
                   <p className="text-xs text-gray-600 dark:text-gray-400">Total Pages</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
@@ -160,7 +158,63 @@ export default function MCPDocsServer() {
                 </div>
               </div>
 
-              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              {/* Multiple Sources List */}
+              {indexInfo.sources && indexInfo.sources.length > 0 ? (
+                <div className="space-y-3">
+                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Indexed Sources:
+                  </p>
+                  <div className="space-y-2">
+                    {indexInfo.sources.map((source, index) => (
+                      <div
+                        key={index}
+                        className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 space-y-1">
+                            <a
+                              href={source.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                            >
+                              {source.name}
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                            <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
+                              <span>{source.pages} pages</span>
+                              <span>•</span>
+                              <span>{source.chunks} chunks</span>
+                              <span>•</span>
+                              <span>{source.words?.toLocaleString()} words</span>
+                            </div>
+                          </div>
+                          <Badge variant="secondary" className="text-xs">
+                            {source.indexedAt ? new Date(source.indexedAt).toLocaleDateString() : "N/A"}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                /* Single Source (Backward Compatibility) */
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-600 dark:text-gray-400">Source</p>
+                  <a
+                    href={indexInfo.source}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                  >
+                    {indexInfo.source?.replace("https://", "").replace("http://", "").split("/")[0]}
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                </div>
+              )}
+
+              {/* Configuration */}
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                   <div className="space-y-1">
                     <p className="text-xs text-gray-600 dark:text-gray-400">Embedding Model</p>
@@ -175,7 +229,7 @@ export default function MCPDocsServer() {
                     </p>
                   </div>
                   <div className="space-y-1">
-                    <p className="text-xs text-gray-600 dark:text-gray-400">Last Indexed</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">Last Updated</p>
                     <p className="text-sm text-gray-900 dark:text-gray-100 flex items-center gap-1">
                       <Clock className="w-3 h-3" />
                       {indexInfo.indexedAt ? new Date(indexInfo.indexedAt).toLocaleDateString() : "N/A"}
@@ -331,9 +385,16 @@ export default function MCPDocsServer() {
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between">
                           <div className="space-y-1 flex-1">
-                            <CardTitle className="text-base font-semibold text-gray-900 dark:text-gray-100">
-                              {result.title}
-                            </CardTitle>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <CardTitle className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                                {result.title}
+                              </CardTitle>
+                              {result.metadata?.source_name && indexInfo?.totalSources > 1 && (
+                                <Badge variant="outline" className="text-xs">
+                                  {result.metadata.source_name}
+                                </Badge>
+                              )}
+                            </div>
                             <CardDescription className="text-sm">
                               <a
                                 href={result.url}
