@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, BookOpen, Search, Info, FileText, ExternalLink, Copy, Check, Database, Layers, Clock, AlertCircle, Plus, Filter, Trash2, Eye, X } from "lucide-react";
+import { Loader2, BookOpen, Search, Info, FileText, ExternalLink, Copy, Check, Database, Layers, Clock, AlertCircle, Plus, Filter, Trash2, Eye, X, ChevronDown, ChevronRight } from "lucide-react";
 
 export default function Home() {
   // State management
@@ -22,6 +22,10 @@ export default function Home() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [sourceToDelete, setSourceToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [expandedSources, setExpandedSources] = useState({});
+  const [sourcePages, setSourcePages] = useState({});
+  const [loadingPages, setLoadingPages] = useState({});
+  const [expandedPages, setExpandedPages] = useState({});
 
   // Load index info on mount
   useEffect(() => {
@@ -88,8 +92,8 @@ export default function Home() {
   // Handle copy with visual feedback
   const handleCopy = (text, index) => {
     navigator.clipboard.writeText(text);
-    setCopiedIndex(index);
-    setTimeout(() => setCopiedIndex(null), 2000);
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex(null), 2000);
   };
 
   // Handle Enter key in search input
@@ -148,6 +152,64 @@ export default function Home() {
   const confirmDelete = (sourceName) => {
     setSourceToDelete(sourceName);
     setDeleteDialogOpen(true);
+  };
+
+  // Toggle source expansion and load pages if needed
+  const toggleSourceExpansion = async (sourceName) => {
+    const isExpanded = expandedSources[sourceName];
+    
+    // Toggle expansion
+    setExpandedSources(prev => ({
+      ...prev,
+      [sourceName]: !isExpanded
+    }));
+
+    // If expanding and we don't have pages yet, load them
+    if (!isExpanded && !sourcePages[sourceName]) {
+      await loadSourcePages(sourceName);
+    }
+  };
+
+  // Load pages for a specific source
+  const loadSourcePages = async (sourceName) => {
+    setLoadingPages(prev => ({ ...prev, [sourceName]: true }));
+    
+    try {
+      const response = await fetch("/api/mcp-source-pages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sourceName: sourceName,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to load pages");
+      }
+
+      setSourcePages(prev => ({
+        ...prev,
+        [sourceName]: data.pages || []
+      }));
+    } catch (err) {
+      console.error(`Error loading pages for ${sourceName}:`, err);
+      setError(err.message);
+    } finally {
+      setLoadingPages(prev => ({ ...prev, [sourceName]: false }));
+    }
+  };
+
+  // Toggle page expansion
+  const togglePageExpansion = (sourceName, pageUrl) => {
+    const key = `${sourceName}:${pageUrl}`;
+    setExpandedPages(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
   };
 
   return (
@@ -226,42 +288,147 @@ export default function Home() {
                     {indexInfo.sources.map((source, index) => (
                       <div
                         key={index}
-                        className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700"
+                        className="bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700"
                       >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1 space-y-1">
-                            <a
-                              href={source.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-                            >
-                              {source.name}
-                              <ExternalLink className="w-3 h-3" />
-                            </a>
-                            <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
-                              <span>{source.pages} pages</span>
-                              <span>•</span>
-                              <span>{source.chunks} chunks</span>
-                              <span>•</span>
-                              <span>{source.words?.toLocaleString()} words</span>
+                        {/* Source Header */}
+                        <div className="p-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1 space-y-1">
+                              <a
+                                href={source.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                              >
+                                {source.name}
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                              <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
+                                <span>{source.pages} pages</span>
+                                <span>•</span>
+                                <span>{source.chunks} chunks</span>
+                                <span>•</span>
+                                <span>{source.words?.toLocaleString()} words</span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="text-xs">
+                                {source.indexedAt ? new Date(source.indexedAt).toLocaleDateString() : "N/A"}
+                              </Badge>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                                onClick={() => toggleSourceExpansion(source.name)}
+                                title="View pages"
+                              >
+                                {expandedSources[source.name] ? (
+                                  <ChevronDown className="w-4 h-4" />
+                                ) : (
+                                  <ChevronRight className="w-4 h-4" />
+                                )}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                onClick={() => confirmDelete(source.name)}
+                                title="Delete source"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary" className="text-xs">
-                              {source.indexedAt ? new Date(source.indexedAt).toLocaleDateString() : "N/A"}
-                            </Badge>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
-                              onClick={() => confirmDelete(source.name)}
-                              title="Delete source"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
                         </div>
+
+                        {/* Expandable Pages List */}
+                        {expandedSources[source.name] && (
+                          <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/50">
+                            {loadingPages[source.name] ? (
+                              <div className="p-4 flex items-center justify-center text-gray-600 dark:text-gray-400">
+                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                Loading pages...
+                              </div>
+                            ) : sourcePages[source.name] && sourcePages[source.name].length > 0 ? (
+                              <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                                {sourcePages[source.name].map((page, pageIdx) => {
+                                  const pageKey = `${source.name}:${page.url}`;
+                                  const isPageExpanded = expandedPages[pageKey];
+                                  
+                                  return (
+                                    <div key={pageIdx} className="p-3">
+                                      {/* Page Header */}
+                                      <div 
+                                        className="flex items-start justify-between gap-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 p-2 rounded -m-2"
+                                        onClick={() => togglePageExpansion(source.name, page.url)}
+                                      >
+                                        <div className="flex-1 space-y-1">
+                                          <div className="flex items-center gap-2">
+                                            {isPageExpanded ? (
+                                              <ChevronDown className="w-3 h-3 text-gray-500 flex-shrink-0" />
+                                            ) : (
+                                              <ChevronRight className="w-3 h-3 text-gray-500 flex-shrink-0" />
+                                            )}
+                                            <span className="text-xs font-medium text-gray-900 dark:text-gray-100">
+                                              {page.title}
+                                            </span>
+                                          </div>
+                                          <a
+                                            href={page.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-xs text-blue-600 dark:text-blue-400 hover:underline ml-5 flex items-center gap-1 w-fit"
+                                            onClick={(e) => e.stopPropagation()}
+                                          >
+                                            {page.url}
+                                            <ExternalLink className="w-2 h-2" />
+                                          </a>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                          <Badge variant="outline" className="text-xs">
+                                            {page.chunkCount} chunks
+                                          </Badge>
+                                          <span>{page.totalWords} words</span>
+                                        </div>
+                                      </div>
+
+                                      {/* Page Chunks (Expanded) */}
+                                      {isPageExpanded && (
+                                        <div className="mt-2 ml-5 space-y-2">
+                                          {page.chunks.map((chunk, chunkIdx) => (
+                                            <div 
+                                              key={chunkIdx}
+                                              className="p-2 bg-gray-50 dark:bg-gray-800/50 rounded border border-gray-200 dark:border-gray-700"
+                                            >
+                                              <div className="flex items-center justify-between mb-1">
+                                                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                                                  Chunk {chunk.chunkIndex + 1}
+                                                </span>
+                                                <Badge variant="secondary" className="text-xs">
+                                                  {chunk.wordCount} words
+                                                </Badge>
+                                              </div>
+                                              <Textarea
+                                                value={chunk.content}
+                                                readOnly
+                                                rows={4}
+                                                className="font-mono text-xs text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-950 resize-none"
+                                              />
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ) : (
+                              <div className="p-4 text-center text-sm text-gray-600 dark:text-gray-400">
+                                No pages found
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -410,32 +577,6 @@ export default function Home() {
                 </>
               )}
             </Button>
-
-            {/* Example Queries */}
-            <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                Example queries:
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  "How do I set up AIR Kit SDK?",
-                  "What is Moca Chain consensus?",
-                  "How to issue credentials?",
-                  "What are smart accounts?",
-                ].map((example, index) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setQuery(example)}
-                    className="text-xs"
-                    disabled={loading}
-                  >
-                    {example}
-                  </Button>
-                ))}
-              </div>
-            </div>
           </CardContent>
         </Card>
 

@@ -30,9 +30,20 @@ export default async function handler(req, res) {
     const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
 
     // Format response - support both single and multi-source formats
+    // Transform sources to camelCase
+    const formattedSources = (metadata.sources || []).map(source => ({
+      name: source.name,
+      url: source.url,
+      pages: source.pages,
+      chunks: source.chunks,
+      words: source.words,
+      indexedAt: source.indexed_at,
+      file: source.file
+    }));
+    
     const response = {
       // Multi-source format
-      sources: metadata.sources || [],
+      sources: formattedSources,
       totalSources: metadata.total_sources || (metadata.sources ? metadata.sources.length : 1),
       
       // Single source backward compatibility
