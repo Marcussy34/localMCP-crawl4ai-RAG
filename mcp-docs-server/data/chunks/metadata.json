@@ -1,0 +1,10 @@
+{
+  "total_pages": 72,
+  "total_chunks": 237,
+  "total_words": 47452,
+  "source": "https://docs.moca.network/",
+  "indexed_at": "2025-10-10T02:42:59.971578Z",
+  "embedding_model": "text-embedding-3-small",
+  "chunk_size": 800,
+  "chunk_overlap": 100
+}
