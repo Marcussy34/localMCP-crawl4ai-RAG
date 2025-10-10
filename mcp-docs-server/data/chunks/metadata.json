@@ -8,20 +8,11 @@
       "words": 47452,
       "indexed_at": "2025-10-10T03:33:43.813526Z",
       "file": "moca_network_docs.json"
-    },
-    {
-      "name": "Solana",
-      "url": "https://solana.com/docs",
-      "pages": 5,
-      "chunks": 27,
-      "words": 5572,
-      "indexed_at": "2025-10-10T06:32:33.270969Z",
-      "file": "solana_docs.json"
     }
   ],
-  "total_chunks": 264,
-  "total_words": 53024,
-  "total_sources": 2,
+  "total_chunks": 237,
+  "total_words": 47452,
+  "total_sources": 1,
   "embedding_model": "text-embedding-3-small",
   "chunk_size": 800,
   "chunk_overlap": 100,
