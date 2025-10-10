@@ -38,7 +38,20 @@ chroma_client = chromadb.PersistentClient(
 # Load metadata
 metadata_path = Path(__file__).parent.parent / "data" / "chunks" / "metadata.json"
 with open(metadata_path, 'r') as f:
-    index_metadata = json.load(f)
+    metadata = json.load(f)
+
+# Format metadata for compatibility (support both single and multi-source)
+index_metadata = {
+    "total_pages": metadata.get("total_pages", 0) or sum(s.get("pages", 0) for s in metadata.get("sources", [])),
+    "total_chunks": metadata.get("total_chunks", 0),
+    "total_words": metadata.get("total_words", 0),
+    "source": metadata.get("source") or (metadata["sources"][0]["url"] if metadata.get("sources") else "Unknown"),
+    "sources": metadata.get("sources", []),
+    "indexed_at": metadata.get("indexed_at") or metadata.get("last_updated"),
+    "embedding_model": metadata.get("embedding_model", "text-embedding-3-small"),
+    "chunk_size": metadata.get("chunk_size", 800),
+    "chunk_overlap": metadata.get("chunk_overlap", 100)
+}
 
 # Get collection
 try:
@@ -48,7 +61,7 @@ except Exception as e:
     sys.exit(1)
 
 # Create MCP server
-server = Server("moca-docs-server")
+server = Server("marcus-mcp-server")
 
 @server.list_tools()
 async def handle_list_tools() -> list[types.Tool]:

@@ -37,7 +37,7 @@ Copy the contents of `cursor-config.json` and add it to your Cursor MCP settings
 ```json
 {
   "mcpServers": {
-    "moca-docs": {
+    "marcus-mcp-server": {
       "command": "/Users/marcus/Projects/crawl4ai_test/venv/bin/python3",
       "args": [
         "/Users/marcus/Projects/crawl4ai_test/mcp-docs-server/server/main.py"
@@ -50,7 +50,7 @@ Copy the contents of `cursor-config.json` and add it to your Cursor MCP settings
 }
 ```
 
-**Important:** If you have existing MCP servers configured, merge this config with your existing one by adding the `"moca-docs"` entry to your existing `"mcpServers"` object.
+**Important:** If you have existing MCP servers configured, merge this config with your existing one by adding the `"marcus-mcp-server"` entry to your existing `"mcpServers"` object.
 
 ### Step 3: Restart Cursor
 
@@ -64,19 +64,19 @@ After adding the configuration, restart Cursor for changes to take effect.
 
 Once configured, you can:
 
-1. **Ask questions about Moca Network documentation:**
+1. **Ask questions about your indexed documentation:**
    ```
-   @moca-docs How do I set up AIR Kit SDK?
+   @marcus-mcp-server How do I set up AIR Kit SDK?
    ```
 
 2. **Search for specific topics:**
    ```
-   @moca-docs What is Moca Chain consensus mechanism?
+   @marcus-mcp-server What is Moca Chain consensus mechanism?
    ```
 
 3. **Get index information:**
    ```
-   @moca-docs What documentation is available?
+   @marcus-mcp-server What documentation is available?
    ```
 
 The AI will automatically use the `search-docs` tool to find relevant documentation and provide context-aware answers!

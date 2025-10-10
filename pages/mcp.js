@@ -524,17 +524,19 @@ export default function MCPDocsServer() {
         {/* Footer */}
         <div className="text-center text-sm text-gray-600 dark:text-gray-400">
           <p>
+            <span className="font-medium">marcus-mcp-server</span>
+            {" • "}
             Powered by{" "}
             <a
-              href="https://docs.moca.network/"
+              href="https://github.com/unclecode/crawl4ai"
               target="_blank"
               rel="noopener noreferrer"
               className="font-medium underline underline-offset-4 hover:text-gray-900 dark:hover:text-gray-100"
             >
-              Moca Network Docs
+              Crawl4AI
             </a>
             {" • "}
-            MCP Server with OpenAI Embeddings
+            OpenAI Embeddings + ChromaDB
           </p>
         </div>
       </div>
