@@ -74,7 +74,8 @@ async def handle_list_tools() -> list[types.Tool]:
                 f"Returns relevant documentation chunks with context. "
                 f"Indexed: {index_metadata['total_pages']} pages, "
                 f"{index_metadata['total_chunks']} chunks, "
-                f"{index_metadata['total_words']:,} words."
+                f"{index_metadata['total_words']:,} words. "
+                f"Available sources: {', '.join(s['name'] for s in index_metadata.get('sources', []))}"
             ),
             inputSchema={
                 "type": "object",
@@ -87,6 +88,10 @@ async def handle_list_tools() -> list[types.Tool]:
                         "type": "integer",
                         "description": f"Maximum number of results to return (default: {DEFAULT_RESULTS})",
                         "default": DEFAULT_RESULTS
+                    },
+                    "source": {
+                        "type": "string",
+                        "description": f"Optional: Filter by documentation source. Available: {', '.join(s['name'] for s in index_metadata.get('sources', []))}. Leave empty to search all sources."
                     }
                 },
                 "required": ["query"]
@@ -112,20 +117,34 @@ async def handle_call_tool(
     if name == "get-index-info":
         info = (
             f"📚 **Documentation Index Information**\n\n"
-            f"**Source:** {index_metadata['source']}\n"
-            f"**Indexed:** {index_metadata['indexed_at']}\n"
+            f"**Last Updated:** {index_metadata['indexed_at']}\n"
             f"**Total Pages:** {index_metadata['total_pages']}\n"
             f"**Total Chunks:** {index_metadata['total_chunks']}\n"
             f"**Total Words:** {index_metadata['total_words']:,}\n"
             f"**Embedding Model:** {index_metadata['embedding_model']}\n"
             f"**Chunk Size:** {index_metadata['chunk_size']} tokens\n"
-            f"**Chunk Overlap:** {index_metadata['chunk_overlap']} tokens\n"
+            f"**Chunk Overlap:** {index_metadata['chunk_overlap']} tokens\n\n"
         )
+        
+        # Add sources breakdown if available
+        if index_metadata.get('sources'):
+            info += "**📖 Available Sources:**\n\n"
+            for source in index_metadata['sources']:
+                info += (
+                    f"- **{source['name']}**\n"
+                    f"  - URL: {source['url']}\n"
+                    f"  - Pages: {source['pages']}\n"
+                    f"  - Chunks: {source['chunks']}\n"
+                    f"  - Words: {source['words']:,}\n"
+                    f"  - Indexed: {source['indexed_at']}\n\n"
+                )
+        
         return [types.TextContent(type="text", text=info)]
     
     elif name == "search-docs":
         query = arguments.get("query")
         max_results = arguments.get("max_results", DEFAULT_RESULTS)
+        source_filter = arguments.get("source")
         
         if not query:
             return [types.TextContent(
@@ -141,11 +160,18 @@ async def handle_call_tool(
             )
             query_embedding = response.data[0].embedding
             
+            # Build search parameters
+            search_params = {
+                "query_embeddings": [query_embedding],
+                "n_results": max_results
+            }
+            
+            # Add source filter if specified
+            if source_filter:
+                search_params["where"] = {"source_name": source_filter}
+            
             # Search
-            results = collection.query(
-                query_embeddings=[query_embedding],
-                n_results=max_results
-            )
+            results = collection.query(**search_params)
             
             if not results['documents'][0]:
                 return [types.TextContent(
@@ -155,6 +181,8 @@ async def handle_call_tool(
             
             # Format results
             output = f"# Search Results for: \"{query}\"\n\n"
+            if source_filter:
+                output += f"**Filtered by source:** {source_filter}\n\n"
             output += f"Found {len(results['documents'][0])} relevant results:\n\n"
             output += "---\n\n"
             
@@ -163,6 +191,7 @@ async def handle_call_tool(
                 results['metadatas'][0]
             ), 1):
                 output += f"## Result {i}\n\n"
+                output += f"**Source:** {metadata.get('source_name', 'Unknown')}\n\n"
                 output += f"**Page:** {metadata['title']}\n\n"
                 output += f"**URL:** {metadata['url']}\n\n"
                 output += f"**Content:**\n\n{doc}\n\n"
