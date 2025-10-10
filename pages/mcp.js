@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, BookOpen, Search, Info, FileText, ExternalLink, Copy, Check, Database, Layers, Clock, AlertCircle } from "lucide-react";
+import { Loader2, BookOpen, Search, Info, FileText, ExternalLink, Copy, Check, Database, Layers, Clock, AlertCircle, Plus } from "lucide-react";
 
 export default function MCPDocsServer() {
   // State management
@@ -98,12 +98,19 @@ export default function MCPDocsServer() {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="mb-4">
+          <div className="mb-4 flex items-center justify-between">
             <a
               href="/"
               className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
             >
               ← Back to Crawl4AI Interface
+            </a>
+            <a
+              href="/add"
+              className="inline-flex items-center gap-2 text-sm font-medium text-green-600 dark:text-green-400 hover:underline"
+            >
+              <Plus className="w-4 h-4" />
+              Add New Docs
             </a>
           </div>
           <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-50">

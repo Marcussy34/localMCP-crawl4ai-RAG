@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Globe, Code, Settings, PlayCircle, CheckCircle, XCircle, Clock, FileText, Layers, AlertTriangle, Copy, Check, BookOpen } from "lucide-react";
+import { Loader2, Globe, Code, Settings, PlayCircle, CheckCircle, XCircle, Clock, FileText, Layers, AlertTriangle, Copy, Check, BookOpen, Plus } from "lucide-react";
 
 // Inter font is now loaded globally in _app.js
 
@@ -133,13 +133,21 @@ export default function Home() {
           <p className="text-gray-600 dark:text-gray-400">
             Test and explore Crawl4AI features
           </p>
-          <div className="pt-2">
+          <div className="pt-2 flex items-center justify-center gap-6">
             <a
               href="/mcp"
               className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
             >
               <BookOpen className="w-4 h-4" />
-              Access MCP Documentation Server
+              MCP Documentation Server
+            </a>
+            <span className="text-gray-400">•</span>
+            <a
+              href="/add"
+              className="inline-flex items-center gap-2 text-sm font-medium text-green-600 dark:text-green-400 hover:underline"
+            >
+              <Plus className="w-4 h-4" />
+              Add Documentation
             </a>
           </div>
         </div>

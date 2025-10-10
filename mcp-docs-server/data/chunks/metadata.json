@@ -1,10 +1,23 @@
 {
   "total_pages": 72,
-  "total_chunks": 237,
-  "total_words": 47452,
+  "total_chunks": 57,
+  "total_words": 13110,
   "source": "https://docs.moca.network/",
   "indexed_at": "2025-10-10T02:42:59.971578Z",
   "embedding_model": "text-embedding-3-small",
   "chunk_size": 800,
-  "chunk_overlap": 100
+  "chunk_overlap": 100,
+  "sources": [
+    {
+      "name": "Solana",
+      "url": "https://solana.com/docs",
+      "pages": 10,
+      "chunks": 57,
+      "words": 13110,
+      "indexed_at": "2025-10-10T03:15:41.924532Z",
+      "file": "solana_docs.json"
+    }
+  ],
+  "total_sources": 1,
+  "last_updated": "2025-10-10T03:15:41.924553Z"
 }
