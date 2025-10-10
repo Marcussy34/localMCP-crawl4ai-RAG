@@ -392,7 +392,7 @@ export default function Home() {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-8 w-8 p-0 text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800"
+                                className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/30 transition-all duration-200 hover:scale-110 cursor-pointer border border-transparent hover:border-red-200 dark:hover:border-red-800"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   confirmDelete(source.name);
