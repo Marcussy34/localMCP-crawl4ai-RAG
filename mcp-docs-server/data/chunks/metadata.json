@@ -8,13 +8,22 @@
       "words": 47452,
       "indexed_at": "2025-10-10T03:33:43.813526Z",
       "file": "moca_network_docs.json"
+    },
+    {
+      "name": "Stacks",
+      "url": "https://docs.stacks.co/",
+      "pages": 4,
+      "chunks": 36,
+      "words": 6791,
+      "indexed_at": "2025-10-10T07:15:25.419423Z",
+      "file": "stacks_docs.json"
     }
   ],
-  "total_chunks": 237,
-  "total_words": 47452,
-  "total_sources": 1,
+  "total_chunks": 273,
+  "total_words": 54243,
+  "total_sources": 2,
   "embedding_model": "text-embedding-3-small",
   "chunk_size": 800,
   "chunk_overlap": 100,
-  "last_updated": "2025-10-10T06:32:33.271019Z"
+  "last_updated": "2025-10-10T07:15:25.419449Z"
 }

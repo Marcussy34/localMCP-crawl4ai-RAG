@@ -3,6 +3,7 @@
  */
 import { spawn } from 'child_process';
 import path from 'path';
+import fs from 'fs';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -80,14 +81,36 @@ export default async function handler(req, res) {
           let totalWords = 0;
 
           for (const line of lines) {
-            if (line.includes('Successfully crawled')) {
-              const match = line.match(/(\d+)\s+pages/);
+            // Match "✅ Crawled X pages" or "Successfully crawled X pages"
+            if (line.includes('Crawled') && line.includes('pages')) {
+              const match = line.match(/Crawled\s+(\d+)\s+pages/i);
               if (match) totalPages = parseInt(match[1]);
             }
+            // Match "✅ Total words: X,XXX"
             if (line.includes('Total words:')) {
               const match = line.match(/Total words:\s+([\d,]+)/);
               if (match) totalWords = parseInt(match[1].replace(/,/g, ''));
             }
+          }
+
+          // Read the JSON file to get accurate stats
+          const outputPath = path.join(
+            process.cwd(),
+            'mcp-docs-server',
+            'data',
+            'raw',
+            filename
+          );
+          
+          try {
+            const fileData = fs.readFileSync(outputPath, 'utf8');
+            const jsonData = JSON.parse(fileData);
+            
+            // Use file data if available, fallback to parsed stdout
+            totalPages = jsonData.total_pages || totalPages;
+            totalWords = jsonData.total_words || totalWords;
+          } catch (fileError) {
+            console.warn('Could not read output file, using parsed stdout:', fileError.message);
           }
 
           resolve({
