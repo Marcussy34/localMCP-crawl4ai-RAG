@@ -115,8 +115,10 @@ crawl4ai-doctor
 npm run dev
 
 # Open browser
-open http://localhost:3000
+open http://localhost:3030
 ```
+
+Open your browser at [http://localhost:3030](http://localhost:3030)
 
 The web UI allows you to:
 - ✅ Add new documentation sources
@@ -158,7 +160,7 @@ Now Claude can search your indexed documentation!
 
 ### Via Web UI (Easiest)
 
-1. Go to http://localhost:3000
+1. Go to http://localhost:3030
 2. Click "Add New Docs"
 3. Enter:
    - **URL**: `https://docs.example.com`
