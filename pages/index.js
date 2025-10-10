@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, BookOpen, Search, Info, FileText, ExternalLink, Copy, Check, Database, Layers, Clock, AlertCircle, Plus, Filter } from "lucide-react";
+import { Loader2, BookOpen, Search, Info, FileText, ExternalLink, Copy, Check, Database, Layers, Clock, AlertCircle, Plus, Filter, Trash2, Eye, X } from "lucide-react";
 
 export default function Home() {
   // State management
@@ -19,6 +19,9 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [copiedIndex, setCopiedIndex] = useState(null);
   const [loadingInfo, setLoadingInfo] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [sourceToDelete, setSourceToDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Load index info on mount
   useEffect(() => {
@@ -94,6 +97,57 @@ export default function Home() {
     if (e.key === "Enter" && !loading) {
       handleSearch();
     }
+  };
+
+  // Handle delete source
+  const handleDeleteSource = async () => {
+    if (!sourceToDelete) return;
+
+    setDeleting(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/mcp-delete-source", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sourceName: sourceToDelete,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete source");
+      }
+
+      // Close dialog and refresh index info
+      setDeleteDialogOpen(false);
+      setSourceToDelete(null);
+      
+      // Reset selected source if it was deleted
+      if (selectedSource === sourceToDelete) {
+        setSelectedSource("all");
+      }
+      
+      // Reload index information
+      await loadIndexInfo();
+      
+      // Show success message briefly
+      setError(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // Open delete confirmation dialog
+  const confirmDelete = (sourceName) => {
+    setSourceToDelete(sourceName);
+    setDeleteDialogOpen(true);
   };
 
   return (
@@ -174,7 +228,7 @@ export default function Home() {
                         key={index}
                         className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700"
                       >
-                        <div className="flex items-start justify-between">
+                        <div className="flex items-start justify-between gap-3">
                           <div className="flex-1 space-y-1">
                             <a
                               href={source.url}
@@ -193,9 +247,20 @@ export default function Home() {
                               <span>{source.words?.toLocaleString()} words</span>
                             </div>
                           </div>
-                          <Badge variant="secondary" className="text-xs">
-                            {source.indexedAt ? new Date(source.indexedAt).toLocaleDateString() : "N/A"}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className="text-xs">
+                              {source.indexedAt ? new Date(source.indexedAt).toLocaleDateString() : "N/A"}
+                            </Badge>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                              onClick={() => confirmDelete(source.name)}
+                              title="Delete source"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -445,8 +510,8 @@ export default function Home() {
                                 {result.url}
                                 <ExternalLink className="w-3 h-3" />
                               </a>
-                            </CardDescription>
-                          </div>
+                                  </CardDescription>
+                                </div>
                           <Badge variant="secondary" className="ml-2 shrink-0">
                             Result {index + 1}
                                 </Badge>
@@ -513,6 +578,66 @@ export default function Home() {
               )}
             </CardContent>
           </Card>
+        )}
+
+        {/* Delete Confirmation Dialog */}
+        {deleteDialogOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <Card className="max-w-md w-full">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
+                  <AlertCircle className="w-5 h-5" />
+                  Confirm Deletion
+                </CardTitle>
+                <CardDescription>
+                  This action cannot be undone.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                    Are you sure you want to delete <strong>{sourceToDelete}</strong>?
+                  </p>
+                  <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-2">
+                    This will remove all {indexInfo?.sources?.find(s => s.name === sourceToDelete)?.chunks} chunks
+                    from the search index.
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => {
+                      setDeleteDialogOpen(false);
+                      setSourceToDelete(null);
+                    }}
+                    variant="outline"
+                    className="flex-1"
+                    disabled={deleting}
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleDeleteSource}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                    disabled={deleting}
+                  >
+                    {deleting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {/* Footer */}
