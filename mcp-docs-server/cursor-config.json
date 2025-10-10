@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "moca-docs": {
+      "command": "/Users/marcus/Projects/crawl4ai_test/venv/bin/python3",
+      "args": [
+        "/Users/marcus/Projects/crawl4ai_test/mcp-docs-server/server/main.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/Users/marcus/Projects/crawl4ai_test/mcp-docs-server"
+      }
+    }
+  }
+}
+
