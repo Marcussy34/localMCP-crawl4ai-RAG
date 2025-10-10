@@ -12,18 +12,18 @@
     {
       "name": "Stacks",
       "url": "https://docs.stacks.co/",
-      "pages": 4,
-      "chunks": 36,
-      "words": 6791,
-      "indexed_at": "2025-10-10T07:15:25.419423Z",
+      "pages": 164,
+      "chunks": 1594,
+      "words": 238946,
+      "indexed_at": "2025-10-10T07:57:33.769495Z",
       "file": "stacks_docs.json"
     }
   ],
-  "total_chunks": 273,
-  "total_words": 54243,
+  "total_chunks": 1831,
+  "total_words": 286398,
   "total_sources": 2,
   "embedding_model": "text-embedding-3-small",
   "chunk_size": 800,
   "chunk_overlap": 100,
-  "last_updated": "2025-10-10T07:15:25.419449Z"
+  "last_updated": "2025-10-10T07:57:33.769566Z"
 }
