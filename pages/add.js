@@ -113,10 +113,10 @@ export default function AddDocumentation() {
         <div className="text-center space-y-2">
           <div className="mb-4">
             <a
-              href="/mcp"
+              href="/"
               className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
             >
-              ← Back to MCP Search
+              ← Back to Home
             </a>
           </div>
           <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-50">
@@ -415,7 +415,7 @@ export default function AddDocumentation() {
               {/* Actions */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button
-                  onClick={() => window.location.href = '/mcp'}
+                  onClick={() => window.location.href = '/'}
                   className="flex-1"
                   size="lg"
                 >
