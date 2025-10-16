@@ -1,15 +1,22 @@
-import { Plus, BookMarked } from "lucide-react";
+import { Plus, BookMarked, FolderGit2 } from "lucide-react";
 
 export default function Header() {
   return (
     <div className="text-center space-y-2">
-      <div className="mb-4 flex items-center justify-end">
+      <div className="mb-4 flex items-center justify-end gap-4">
         <a
           href="/add"
           className="inline-flex items-center gap-2 text-sm font-medium text-green-600 dark:text-green-400 hover:underline"
         >
           <Plus className="w-4 h-4" />
           Add New Docs
+        </a>
+        <a
+          href="/add-repo"
+          className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
+        >
+          <FolderGit2 className="w-4 h-4" />
+          Add Repository
         </a>
       </div>
       <div className="flex items-center justify-center gap-3">
