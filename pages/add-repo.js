@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, FolderGit2, CheckCircle, XCircle, AlertCircle, BookOpen, Database } from "lucide-react";
+import { Loader2, FolderGit2, CheckCircle, XCircle, AlertCircle, BookOpen, Database, ArrowRight } from "lucide-react";
 
 export default function AddRepository() {
   // State management
@@ -102,6 +102,53 @@ export default function AddRepository() {
               Index a local GitHub repository for semantic search
             </p>
           </div>
+
+          {/* Progress Steps */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                {/* Step 1: Configure */}
+                <div className="flex items-center gap-2">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    step === "input" ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900" :
+                    ["indexing", "complete"].includes(step) ? "bg-gray-700 text-white dark:bg-gray-300 dark:text-gray-900" :
+                    "bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-300"
+                  }`}>
+                    {["indexing", "complete"].includes(step) ? <CheckCircle className="w-4 h-4" /> : "1"}
+                  </div>
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Configure</span>
+                </div>
+
+                <ArrowRight className="w-4 h-4 text-gray-400" />
+
+                {/* Step 2: Index */}
+                <div className="flex items-center gap-2">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    step === "indexing" ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900" :
+                    step === "complete" ? "bg-gray-700 text-white dark:bg-gray-300 dark:text-gray-900" :
+                    "bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-300"
+                  }`}>
+                    {step === "indexing" ? <Loader2 className="w-4 h-4 animate-spin" /> :
+                     step === "complete" ? <CheckCircle className="w-4 h-4" /> : "2"}
+                  </div>
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Index</span>
+                </div>
+
+                <ArrowRight className="w-4 h-4 text-gray-400" />
+
+                {/* Step 3: Complete */}
+                <div className="flex items-center gap-2">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    step === "complete" ? "bg-gray-700 text-white dark:bg-gray-300 dark:text-gray-900" :
+                    "bg-gray-300 dark:bg-gray-600 text-gray-600 dark:text-gray-300"
+                  }`}>
+                    {step === "complete" ? <CheckCircle className="w-4 h-4" /> : "3"}
+                  </div>
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">Done</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Input Form */}
           {step === "input" && (
