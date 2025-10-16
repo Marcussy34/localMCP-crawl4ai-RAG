@@ -17,6 +17,7 @@ export default function Home() {
   const [searchResults, setSearchResults] = useState(null);
   const [indexInfo, setIndexInfo] = useState(null);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
   const [loadingInfo, setLoadingInfo] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [sourceToDelete, setSourceToDelete] = useState(null);
@@ -101,6 +102,7 @@ export default function Home() {
 
     setDeleting(true);
     setError(null);
+    setSuccessMessage(null);
 
     try {
       const response = await fetch("/api/mcp-delete-source", {
@@ -119,22 +121,31 @@ export default function Home() {
         throw new Error(data.error || "Failed to delete source");
       }
 
+      // Store the deleted source name for the success message
+      const deletedSource = sourceToDelete;
+
       // Close dialog and refresh index info
       setDeleteDialogOpen(false);
       setSourceToDelete(null);
       
       // Reset selected source if it was deleted
-      if (selectedSource === sourceToDelete) {
+      if (selectedSource === deletedSource) {
         setSelectedSource("all");
       }
       
       // Reload index information
       await loadIndexInfo();
       
-      // Show success message briefly
-      setError(null);
+      // Show success message
+      setSuccessMessage(`Successfully deleted "${deletedSource}" (${data.chunks_removed || 0} chunks removed)`);
+      
+      // Auto-hide success message after 5 seconds
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 5000);
     } catch (err) {
       setError(err.message);
+      // Keep dialog open on error so user can retry
     } finally {
       setDeleting(false);
     }
@@ -245,6 +256,18 @@ export default function Home() {
 
           <ErrorDisplay error={error} />
 
+          {/* Success message */}
+          {successMessage && (
+            <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+              <div className="flex items-center gap-2">
+                <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-sm text-green-800 dark:text-green-200">{successMessage}</p>
+              </div>
+            </div>
+          )}
+
           <SearchResults
             searchResults={searchResults}
             selectedSource={selectedSource}
@@ -260,6 +283,7 @@ export default function Home() {
             onCancel={() => {
                       setDeleteDialogOpen(false);
                       setSourceToDelete(null);
+                      setError(null);
                     }}
           />
 

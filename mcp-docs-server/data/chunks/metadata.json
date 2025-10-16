@@ -18,7 +18,7 @@
       "total_lines": 48708,
       "repo_path": "/Users/marcus/Projects/Credo-Protocol",
       "file_extensions": null,
-      "indexed_at": "2025-10-16T08:30:00.000000Z",
+      "indexed_at": "2025-10-16T09:01:58.963Z",
       "embedding_model": "text-embedding-3-small",
       "chunk_size": 800,
       "chunk_overlap": 100

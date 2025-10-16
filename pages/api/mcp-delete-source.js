@@ -22,48 +22,73 @@ export default async function handler(req, res) {
     );
     const pythonPath = path.join(process.cwd(), 'venv', 'bin', 'python3');
 
-    // Execute Python deletion script
-    const pythonProcess = spawn(pythonPath, [scriptPath, sourceName]);
+    // Wrap in Promise to handle async process properly
+    const result = await new Promise((resolve, reject) => {
+      // Execute Python deletion script
+      const pythonProcess = spawn(pythonPath, [scriptPath, sourceName]);
 
-    let output = '';
-    let errorOutput = '';
+      let output = '';
+      let errorOutput = '';
 
-    pythonProcess.stdout.on('data', (data) => {
-      output += data.toString();
-    });
+      pythonProcess.stdout.on('data', (data) => {
+        output += data.toString();
+      });
 
-    pythonProcess.stderr.on('data', (data) => {
-      errorOutput += data.toString();
-    });
+      pythonProcess.stderr.on('data', (data) => {
+        errorOutput += data.toString();
+      });
 
-    pythonProcess.on('close', (code) => {
-      if (code !== 0) {
-        console.error('Python error:', errorOutput);
-        return res.status(500).json({
-          error: 'Failed to delete source',
-          details: errorOutput || 'Unknown error',
-        });
-      }
-
-      try {
-        const result = JSON.parse(output);
-        
-        if (!result.success) {
-          return res.status(400).json(result);
+      pythonProcess.on('close', (code) => {
+        if (code !== 0) {
+          console.error('Python error:', errorOutput);
+          reject({
+            status: 500,
+            error: 'Failed to delete source',
+            details: errorOutput || 'Unknown error',
+          });
+          return;
         }
 
-        return res.status(200).json(result);
-      } catch (parseError) {
-        console.error('Parse error:', parseError);
-        console.error('Output:', output);
-        return res.status(500).json({
-          error: 'Failed to parse deletion result',
-          details: output,
+        try {
+          const parsedResult = JSON.parse(output);
+          resolve(parsedResult);
+        } catch (parseError) {
+          console.error('Parse error:', parseError);
+          console.error('Output:', output);
+          reject({
+            status: 500,
+            error: 'Failed to parse deletion result',
+            details: output,
+          });
+        }
+      });
+
+      pythonProcess.on('error', (err) => {
+        reject({
+          status: 500,
+          error: 'Failed to spawn Python process',
+          details: err.message,
         });
-      }
+      });
     });
+
+    // Check if deletion was successful
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+
+    return res.status(200).json(result);
   } catch (error) {
     console.error('Error deleting source:', error);
+    
+    // Handle both Error objects and our custom error objects
+    if (error.status) {
+      return res.status(error.status).json({
+        error: error.error,
+        details: error.details,
+      });
+    }
+    
     return res.status(500).json({
       error: 'Internal server error',
       details: error.message,

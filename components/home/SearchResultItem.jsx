@@ -24,7 +24,7 @@ export default function SearchResultItem({ result, index, totalSources }) {
                 {result.title}
               </CardTitle>
               {result.metadata?.source_name && totalSources > 1 && (
-                <Badge variant="outline" className="text-xs">
+                <Badge variant="secondary" className="text-xs font-medium">
                   {result.metadata.source_name}
                 </Badge>
               )}
