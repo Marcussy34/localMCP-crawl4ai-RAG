@@ -1,6 +1,8 @@
-import { Database, Clock, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { Database, Clock, ExternalLink, FileText, FolderGit2 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import SourceItem from "./SourceItem";
 
 export default function IndexInfoCard({ 
@@ -13,6 +15,8 @@ export default function IndexInfoCard({
   onDeleteSource,
   onSetCurrentPage
 }) {
+  const [categoryFilter, setCategoryFilter] = useState("all");
+
   if (!indexInfo) return null;
 
   const getCurrentPage = (sourceName) => {
@@ -23,6 +27,19 @@ export default function IndexInfoCard({
     onSetCurrentPage(sourceName, pageNum);
   };
 
+  // Filter sources by category
+  const docSources = indexInfo.sources?.filter(s => s.type === 'documentation') || [];
+  const repoSources = indexInfo.sources?.filter(s => s.type === 'repository') || [];
+  
+  // Get filtered sources based on category
+  const getFilteredSources = () => {
+    if (categoryFilter === 'docs') return docSources;
+    if (categoryFilter === 'repos') return repoSources;
+    return indexInfo.sources || [];
+  };
+
+  const filteredSources = getFilteredSources();
+
   return (
     <Card>
       <CardHeader>
@@ -31,14 +48,14 @@ export default function IndexInfoCard({
             <Database className="w-5 h-5" />
             Index Information
           </span>
-          {indexInfo.totalSources > 1 && (
-            <Badge variant="outline" className="text-gray-900 dark:text-gray-100">
-              {indexInfo.totalSources} Sources
-            </Badge>
-          )}
+          <Badge variant="outline" className="text-gray-900 dark:text-gray-100">
+            {indexInfo.totalSources} Sources
+          </Badge>
         </CardTitle>
         <CardDescription>
-          {indexInfo.totalSources > 1 
+          {docSources.length > 0 && repoSources.length > 0
+            ? `${docSources.length} docs, ${repoSources.length} repositories`
+            : indexInfo.totalSources > 1 
             ? "Multiple documentation sources indexed"
             : "Currently indexed documentation"}
         </CardDescription>
@@ -66,26 +83,63 @@ export default function IndexInfoCard({
           </div>
         </div>
 
-        {/* Multiple Sources List */}
+        {/* Multiple Sources List with Category Tabs */}
         {indexInfo.sources && indexInfo.sources.length > 0 ? (
           <div className="space-y-3">
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Indexed Sources:
-            </p>
+            {/* Category Filter Tabs */}
+            <Tabs value={categoryFilter} onValueChange={setCategoryFilter} className="w-full">
+              <TabsList className="grid w-full grid-cols-3 bg-gray-200 dark:bg-gray-700 p-1">
+                <TabsTrigger 
+                  value="all" 
+                  className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-gray-900 dark:data-[state=active]:bg-gray-900 dark:data-[state=active]:text-gray-100 text-gray-700 dark:text-gray-300"
+                >
+                  <Database className="w-4 h-4" />
+                  All ({indexInfo.sources.length})
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="docs" 
+                  className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-gray-900 dark:data-[state=active]:bg-gray-900 dark:data-[state=active]:text-gray-100 text-gray-700 dark:text-gray-300"
+                >
+                  <FileText className="w-4 h-4" />
+                  Docs ({docSources.length})
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="repos" 
+                  className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:text-gray-900 dark:data-[state=active]:bg-gray-900 dark:data-[state=active]:text-gray-100 text-gray-700 dark:text-gray-300"
+                >
+                  <FolderGit2 className="w-4 h-4" />
+                  Repos ({repoSources.length})
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            {/* Filtered Sources List */}
             <div className="space-y-2">
-              {indexInfo.sources.map((source, index) => (
-                <SourceItem
-                  key={index}
-                  source={source}
-                  onDelete={onDeleteSource}
-                  onToggleExpansion={() => onToggleSourceExpansion(source.name)}
-                  isExpanded={expandedSources[source.name]}
-                  pages={sourcePages[source.name]}
-                  loadingPages={loadingPages[source.name]}
-                  currentPage={getCurrentPage(source.name)}
-                  setCurrentPage={(pageNum) => setCurrentPage(source.name, pageNum)}
-                />
-              ))}
+              {filteredSources.length > 0 ? (
+                filteredSources.map((source, index) => (
+                  <SourceItem
+                    key={index}
+                    source={source}
+                    onDelete={onDeleteSource}
+                    onToggleExpansion={() => onToggleSourceExpansion(source.name)}
+                    isExpanded={expandedSources[source.name]}
+                    pages={sourcePages[source.name]}
+                    loadingPages={loadingPages[source.name]}
+                    currentPage={getCurrentPage(source.name)}
+                    setCurrentPage={(pageNum) => setCurrentPage(source.name, pageNum)}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <p className="text-sm">
+                    {categoryFilter === 'docs' 
+                      ? 'No documentation sources yet'
+                      : categoryFilter === 'repos'
+                      ? 'No repositories indexed yet'
+                      : 'No sources indexed yet'}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         ) : (

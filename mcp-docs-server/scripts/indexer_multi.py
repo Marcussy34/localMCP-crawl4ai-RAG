@@ -263,6 +263,7 @@ class MultiDocIndexer:
         new_source_info = {
             "name": source_name,
             "url": source_url,
+            "type": "documentation",
             "pages": total_pages,
             "chunks": len(all_chunks),
             "words": data.get('total_words', 0),

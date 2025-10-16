@@ -3,6 +3,7 @@
     {
       "name": "Moca Network",
       "url": "https://docs.moca.network/",
+      "type": "documentation",
       "pages": 72,
       "chunks": 237,
       "words": 47452,
@@ -12,6 +13,7 @@
     {
       "name": "Stacks",
       "url": "https://docs.stacks.co/",
+      "type": "documentation",
       "pages": 164,
       "chunks": 1594,
       "words": 238946,

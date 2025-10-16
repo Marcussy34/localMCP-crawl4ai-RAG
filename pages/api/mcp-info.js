@@ -34,11 +34,13 @@ export default async function handler(req, res) {
     const formattedSources = (metadata.sources || []).map(source => ({
       name: source.name,
       url: source.url,
-      pages: source.pages,
-      chunks: source.chunks,
-      words: source.words,
+      pages: source.pages || source.total_files,
+      chunks: source.chunks || source.total_chunks,
+      words: source.words || source.total_lines,
       indexedAt: source.indexed_at,
-      file: source.file
+      file: source.file,
+      type: source.type || 'documentation', // 'documentation' or 'repository'
+      repoPath: source.repo_path // For repositories
     }));
     
     const response = {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ExternalLink, ChevronDown, ChevronRight, Trash2, Loader2, ChevronLeft } from "lucide-react";
+import { ExternalLink, ChevronDown, ChevronRight, Trash2, Loader2, ChevronLeft, FileText, FolderGit2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import PageItem from "./PageItem";
@@ -40,6 +40,7 @@ export default function SourceItem({
   };
 
   const paginationData = getPaginatedPages();
+  const isRepository = source.type === 'repository';
 
   return (
     <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -50,25 +51,55 @@ export default function SourceItem({
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 space-y-1">
-            <a
-              href={source.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 w-fit"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {source.name}
-              <ExternalLink className="w-3 h-3" />
-            </a>
+            {/* Source name with icon and link/path */}
+            <div className="flex items-center gap-2">
+              {isRepository ? (
+                <FolderGit2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              ) : (
+                <FileText className="w-4 h-4 text-green-600 dark:text-green-400" />
+              )}
+              {isRepository ? (
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                    {source.name}
+                  </span>
+                  {source.repoPath && (
+                    <span className="text-xs text-gray-500 dark:text-gray-400 font-mono">
+                      {source.repoPath}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <a
+                  href={source.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {source.name}
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
+            </div>
+            
+            {/* Stats - different for repos vs docs */}
             <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
-              <span>{source.pages} pages</span>
+              <span>{source.pages} {isRepository ? 'files' : 'pages'}</span>
               <span>•</span>
               <span>{source.chunks} chunks</span>
               <span>•</span>
-              <span>{source.words?.toLocaleString()} words</span>
+              <span>{source.words?.toLocaleString()} {isRepository ? 'lines' : 'words'}</span>
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Type badge */}
+            <Badge 
+              variant={isRepository ? "default" : "secondary"} 
+              className={`text-xs ${isRepository ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'}`}
+            >
+              {isRepository ? 'Repository' : 'Docs'}
+            </Badge>
             <Badge variant="secondary" className="text-xs">
               {source.indexedAt ? new Date(source.indexedAt).toLocaleDateString() : "N/A"}
             </Badge>
