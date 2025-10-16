@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Head from "next/head";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,15 @@ export default function AddRepository() {
   const [step, setStep] = useState("input"); // input, indexing, complete, error
   const [indexResult, setIndexResult] = useState(null);
   const [error, setError] = useState(null);
+  const [progressLogs, setProgressLogs] = useState([]);
+  const progressEndRef = useRef(null);
+
+  // Auto-scroll to bottom when new logs arrive
+  useEffect(() => {
+    if (progressEndRef.current && step === "indexing") {
+      progressEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [progressLogs, step]);
 
   // Auto-generate source name from repo path
   const handleRepoPathChange = (newPath) => {
@@ -30,6 +39,43 @@ export default function AddRepository() {
     }
   };
 
+  // Handle drag and drop for folder
+  const handleDrop = (event) => {
+    event.preventDefault();
+    const items = event.dataTransfer.items;
+    
+    if (items && items.length > 0) {
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.kind === 'file') {
+          const entry = item.webkitGetAsEntry();
+          if (entry && entry.isDirectory) {
+            // Show instructions
+            alert(
+              `📁 Folder detected: "${entry.name}"\n\n` +
+              `Due to browser security, please:\n` +
+              `1. Right-click the folder in Finder\n` +
+              `2. Hold Option (⌥) key\n` +
+              `3. Click "Copy as Pathname"\n` +
+              `4. Paste into the field above`
+            );
+            
+            // Auto-fill source name
+            if (!sourceName) {
+              const name = entry.name.charAt(0).toUpperCase() + entry.name.slice(1).replace(/-/g, ' ');
+              setSourceName(name);
+            }
+            break;
+          }
+        }
+      }
+    }
+  };
+
+  const handleDragOver = (event) => {
+    event.preventDefault();
+  };
+
   // Reset form
   const resetForm = () => {
     setStep("input");
@@ -37,11 +83,13 @@ export default function AddRepository() {
     setSourceName("");
     setIndexResult(null);
     setError(null);
+    setProgressLogs([]);
   };
 
-  // Handle the entire add process
+  // Handle the entire add process with SSE
   const handleAddRepository = async () => {
     setError(null);
+    setProgressLogs([]);
     
     // Validate inputs
     if (!repoPath || !sourceName) {
@@ -50,9 +98,10 @@ export default function AddRepository() {
     }
 
     try {
-      // Index the repository
+      // Index the repository with SSE streaming
       setStep("indexing");
-      const indexResponse = await fetch("/api/add-repo-index", {
+      
+      const response = await fetch("/api/add-repo-index", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -61,14 +110,31 @@ export default function AddRepository() {
         }),
       });
 
-      const indexData = await indexResponse.json();
-      
-      if (!indexResponse.ok) {
-        throw new Error(indexData.error || "Indexing failed");
-      }
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
 
-      setIndexResult(indexData);
-      setStep("complete");
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = JSON.parse(line.slice(6));
+            
+            if (data.type === 'progress' || data.type === 'info' || data.type === 'start') {
+              setProgressLogs(prev => [...prev, data.message]);
+            } else if (data.type === 'complete') {
+              setIndexResult(data.data);
+              setStep("complete");
+            } else if (data.type === 'error') {
+              throw new Error(data.message);
+            }
+          }
+        }
+      }
 
     } catch (err) {
       setError(err.message);
@@ -168,17 +234,33 @@ export default function AddRepository() {
                   <Label htmlFor="repo-path" className="text-gray-900 dark:text-gray-100">
                     Repository Path
                   </Label>
-                  <Input
-                    id="repo-path"
-                    type="text"
-                    placeholder="/Users/username/Projects/my-repo"
-                    value={repoPath}
-                    onChange={(e) => handleRepoPathChange(e.target.value)}
-                    className="text-gray-900 dark:text-gray-100"
-                  />
-                  <p className="text-xs text-gray-600 dark:text-gray-400">
-                    The absolute path to your local repository
-                  </p>
+                  <div 
+                    className="relative"
+                    onDrop={handleDrop}
+                    onDragOver={handleDragOver}
+                  >
+                    <Input
+                      id="repo-path"
+                      type="text"
+                      placeholder="Drag folder here or paste path: /Users/username/Projects/my-repo"
+                      value={repoPath}
+                      onChange={(e) => handleRepoPathChange(e.target.value)}
+                      className="text-gray-900 dark:text-gray-100 pr-24"
+                    />
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <FolderGit2 className="w-4 h-4 text-gray-400" />
+                    </div>
+                  </div>
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-3">
+                    <p className="text-xs font-medium text-blue-900 dark:text-blue-300 mb-2">
+                      💡 How to get your folder path:
+                    </p>
+                    <ol className="text-xs text-blue-800 dark:text-blue-300 space-y-1 list-decimal list-inside">
+                      <li>Open Finder and find your repository folder</li>
+                      <li><strong>Drag the folder</strong> into the field above, OR</li>
+                      <li>Right-click folder → Hold <strong>Option (⌥)</strong> → Click "Copy as Pathname" → Paste above</li>
+                    </ol>
+                  </div>
                 </div>
 
                 {/* Source Name */}
@@ -227,11 +309,25 @@ export default function AddRepository() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="w-12 h-12 animate-spin text-gray-700 dark:text-gray-300" />
+                  {/* Progress Log */}
+                  <div className="bg-gray-900 dark:bg-gray-950 rounded-lg p-4 max-h-96 overflow-y-auto font-mono text-xs">
+                    {progressLogs.length === 0 ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="w-8 h-8 animate-spin text-gray-500" />
+                      </div>
+                    ) : (
+                      <>
+                        {progressLogs.map((log, index) => (
+                          <div key={index} className="text-green-400 py-0.5">
+                            {log}
+                          </div>
+                        ))}
+                        <div ref={progressEndRef} />
+                      </>
+                    )}
                   </div>
                   <p className="text-center text-sm text-gray-600 dark:text-gray-400">
-                    Reading and embedding code files...
+                    ⏳ Live progress - This may take several minutes for large repositories...
                   </p>
                 </div>
               </CardContent>

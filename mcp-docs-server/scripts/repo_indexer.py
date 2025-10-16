@@ -15,6 +15,10 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import tiktoken
 
+# Force unbuffered output
+sys.stdout.reconfigure(line_buffering=True)
+sys.stderr.reconfigure(line_buffering=True)
+
 # Load environment variables
 load_dotenv()
 

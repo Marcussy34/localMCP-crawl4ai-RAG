@@ -9,6 +9,19 @@
       "words": 47452,
       "indexed_at": "2025-10-10T03:33:43.813526Z",
       "file": "moca_network_docs.json"
+    },
+    {
+      "name": "Credo Protocol",
+      "type": "repository",
+      "total_files": 216,
+      "total_chunks": 2107,
+      "total_lines": 48708,
+      "repo_path": "/Users/marcus/Projects/Credo-Protocol",
+      "file_extensions": null,
+      "indexed_at": null,
+      "embedding_model": "text-embedding-3-small",
+      "chunk_size": 800,
+      "chunk_overlap": 100
     }
   ],
   "total_chunks": 237,

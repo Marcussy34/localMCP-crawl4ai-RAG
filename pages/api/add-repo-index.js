@@ -9,26 +9,42 @@ export default async function handler(req, res) {
   }
 
   const { repoPath, sourceName } = req.body;
+  
+  // Set up SSE headers for streaming
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no'); // Disable nginx buffering
+  
+  // Prevent compression
+  res.socket.setNoDelay(true);
+  res.flushHeaders();
+
+  // Helper to send SSE message
+  const sendProgress = (data) => {
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
+    if (res.flush) res.flush(); // Force flush if available
+  };
 
   // Validate inputs
   if (!repoPath || !sourceName) {
-    return res.status(400).json({ 
-      error: 'Missing required fields: repoPath and sourceName' 
-    });
+    sendProgress({ type: 'error', message: 'Missing required fields: repoPath and sourceName' });
+    res.end();
+    return;
   }
 
   // Check if repository path exists
   try {
     const stats = await fs.stat(repoPath);
     if (!stats.isDirectory()) {
-      return res.status(400).json({ 
-        error: 'Repository path is not a directory' 
-      });
+      sendProgress({ type: 'error', message: 'Repository path is not a directory' });
+      res.end();
+      return;
     }
   } catch (err) {
-    return res.status(400).json({ 
-      error: `Repository path does not exist: ${repoPath}` 
-    });
+    sendProgress({ type: 'error', message: `Repository path does not exist: ${repoPath}` });
+    res.end();
+    return;
   }
 
   // Get the Python script path
@@ -42,10 +58,9 @@ export default async function handler(req, res) {
   // Get the venv Python path
   const pythonPath = path.join(process.cwd(), 'venv', 'bin', 'python');
 
-  console.log('Starting repository indexing...');
-  console.log('Repository:', repoPath);
-  console.log('Source name:', sourceName);
-  console.log('Mode: Index all text files');
+  sendProgress({ type: 'start', message: 'Starting repository indexing...' });
+  sendProgress({ type: 'info', message: `Repository: ${repoPath}` });
+  sendProgress({ type: 'info', message: `Source name: ${sourceName}` });
 
   // Run the Python indexer script (no extensions = index all text files)
   return new Promise((resolve) => {
@@ -53,16 +68,24 @@ export default async function handler(req, res) {
       scriptPath,
       repoPath,
       sourceName
-    ]);
+    ], {
+      env: { ...process.env, PYTHONUNBUFFERED: '1' } // Disable Python buffering
+    });
 
     let stdout = '';
     let stderr = '';
 
-    // Capture stdout
+    // Capture stdout and stream to browser
     python.stdout.on('data', (data) => {
       const output = data.toString();
       stdout += output;
-      console.log(output);
+      
+      // Stream each line to browser
+      const lines = output.split('\n').filter(line => line.trim());
+      lines.forEach(line => {
+        console.log('Sending progress:', line); // Debug log
+        sendProgress({ type: 'progress', message: line });
+      });
     });
 
     // Capture stderr
@@ -77,12 +100,13 @@ export default async function handler(req, res) {
       if (code !== 0) {
         console.error('Indexing failed with code', code);
         console.error('stderr:', stderr);
-        resolve(
-          res.status(500).json({
-            error: 'Indexing failed',
-            details: stderr || stdout,
-          })
-        );
+        sendProgress({ 
+          type: 'error', 
+          message: 'Indexing failed',
+          details: stderr || stdout
+        });
+        res.end();
+        resolve();
         return;
       }
 
@@ -127,8 +151,11 @@ export default async function handler(req, res) {
         }
 
         console.log('Indexing complete!');
-        resolve(
-          res.status(200).json({
+        
+        // Send final result
+        sendProgress({
+          type: 'complete',
+          data: {
             success: true,
             totalFiles,
             chunksCreated,
@@ -136,28 +163,33 @@ export default async function handler(req, res) {
             estimatedCost,
             totalStats,
             sourceName,
-          })
-        );
+          }
+        });
+        
+        res.end();
+        resolve();
       } catch (err) {
         console.error('Error parsing results:', err);
-        resolve(
-          res.status(500).json({
-            error: 'Failed to parse indexing results',
-            details: err.message,
-          })
-        );
+        sendProgress({
+          type: 'error',
+          message: 'Failed to parse indexing results',
+          details: err.message,
+        });
+        res.end();
+        resolve();
       }
     });
 
     // Handle errors
     python.on('error', (err) => {
       console.error('Failed to start Python process:', err);
-      resolve(
-        res.status(500).json({
-          error: 'Failed to start indexing process',
-          details: err.message,
-        })
-      );
+      sendProgress({
+        type: 'error',
+        message: 'Failed to start indexing process',
+        details: err.message,
+      });
+      res.end();
+      resolve();
     });
   });
 }
