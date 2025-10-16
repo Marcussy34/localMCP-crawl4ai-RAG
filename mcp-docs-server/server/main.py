@@ -130,14 +130,21 @@ async def handle_call_tool(
         if index_metadata.get('sources'):
             info += "**📖 Available Sources:**\n\n"
             for source in index_metadata['sources']:
-                info += (
-                    f"- **{source['name']}**\n"
-                    f"  - URL: {source['url']}\n"
-                    f"  - Pages: {source['pages']}\n"
-                    f"  - Chunks: {source['chunks']}\n"
-                    f"  - Words: {source['words']:,}\n"
-                    f"  - Indexed: {source['indexed_at']}\n\n"
-                )
+                is_repo = source.get('type') == 'repository'
+                info += f"- **{source['name']}** ({'Repository' if is_repo else 'Documentation'})\n"
+                
+                if is_repo:
+                    info += f"  - Path: {source.get('repo_path', 'N/A')}\n"
+                    info += f"  - Files: {source.get('total_files', 0)}\n"
+                    info += f"  - Chunks: {source.get('total_chunks', 0)}\n"
+                    info += f"  - Lines: {source.get('total_lines', 0):,}\n"
+                else:
+                    info += f"  - URL: {source.get('url', 'N/A')}\n"
+                    info += f"  - Pages: {source.get('pages', 0)}\n"
+                    info += f"  - Chunks: {source.get('chunks', 0)}\n"
+                    info += f"  - Words: {source.get('words', 0):,}\n"
+                
+                info += f"  - Indexed: {source.get('indexed_at', 'N/A')}\n\n"
         
         return [types.TextContent(type="text", text=info)]
     
@@ -168,7 +175,7 @@ async def handle_call_tool(
             
             # Add source filter if specified
             if source_filter:
-                search_params["where"] = {"source_name": source_filter}
+                search_params["where"] = {"source": source_filter}
             
             # Search
             results = collection.query(**search_params)
@@ -191,9 +198,23 @@ async def handle_call_tool(
                 results['metadatas'][0]
             ), 1):
                 output += f"## Result {i}\n\n"
-                output += f"**Source:** {metadata.get('source_name', 'Unknown')}\n\n"
-                output += f"**Page:** {metadata['title']}\n\n"
-                output += f"**URL:** {metadata['url']}\n\n"
+                
+                # Handle both documentation and repository metadata
+                is_repository = metadata.get('source_type') == 'repository'
+                
+                if is_repository:
+                    # Repository chunk
+                    output += f"**Source:** {metadata.get('source', 'Unknown')} (Repository)\n\n"
+                    output += f"**File:** {metadata.get('file_path', 'Unknown')}\n\n"
+                    output += f"**Full Path:** {metadata.get('full_path', 'Unknown')}\n\n"
+                    output += f"**Lines:** {metadata.get('lines', 'Unknown')}\n\n"
+                else:
+                    # Documentation chunk
+                    output += f"**Source:** {metadata.get('source_name', 'Unknown')} (Documentation)\n\n"
+                    output += f"**Page:** {metadata.get('title', 'Untitled')}\n\n"
+                    output += f"**URL:** {metadata.get('url', 'Unknown')}\n\n"
+                    output += f"**Words:** {metadata.get('word_count', 'Unknown')}\n\n"
+                
                 output += f"**Content:**\n\n{doc}\n\n"
                 output += "---\n\n"
             
