@@ -113,13 +113,13 @@ export default async function handler(req, res) {
       // Parse results from stdout
       try {
         // Extract statistics from the output
-        const filesMatch = stdout.match(/Found (\d+) files/);
-        const chunksMatch = stdout.match(/Successfully indexed (\d+) chunks/);
+        const filesMatch = stdout.match(/(?:Found|Indexed) (\d+) (?:text )?files/);
+        const chunksMatch = stdout.match(/Successfully indexed (\d+) chunks|Indexed \d+ files into (\d+) chunks/);
         const linesMatch = stdout.match(/Total lines: ([\d,]+)/);
         const costMatch = stdout.match(/Estimated cost: \$([\d.]+)/);
 
         const totalFiles = filesMatch ? parseInt(filesMatch[1]) : 0;
-        const chunksCreated = chunksMatch ? parseInt(chunksMatch[1]) : 0;
+        const chunksCreated = chunksMatch ? parseInt(chunksMatch[1] || chunksMatch[2]) : 0;
         const totalLines = linesMatch ? parseInt(linesMatch[1].replace(/,/g, '')) : 0;
         const estimatedCost = costMatch ? parseFloat(costMatch[1]) : 0;
 
