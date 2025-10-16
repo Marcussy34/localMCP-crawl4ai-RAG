@@ -152,6 +152,18 @@ export default async function handler(req, res) {
 
         console.log('Indexing complete!');
         
+        // Update metadata with indexed_at timestamp
+        try {
+          const metadata = JSON.parse(await fs.readFile(metadataPath, 'utf-8'));
+          const sourceIndex = metadata.sources.findIndex(s => s.name === sourceName);
+          if (sourceIndex >= 0) {
+            metadata.sources[sourceIndex].indexed_at = new Date().toISOString();
+            await fs.writeFile(metadataPath, JSON.stringify(metadata, null, 2));
+          }
+        } catch (err) {
+          console.warn('Could not update indexed_at timestamp:', err);
+        }
+        
         // Send final result
         sendProgress({
           type: 'complete',
