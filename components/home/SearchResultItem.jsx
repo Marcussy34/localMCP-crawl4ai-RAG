@@ -8,6 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 export default function SearchResultItem({ result, index, totalSources }) {
   const [copied, setCopied] = useState(false);
 
+  // Check if this is a repository result
+  const isRepository = result.metadata?.source_type === 'repository';
+
   const handleCopy = (text) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
@@ -28,17 +31,35 @@ export default function SearchResultItem({ result, index, totalSources }) {
                   {result.metadata.source_name}
                 </Badge>
               )}
+              {isRepository && (
+                <Badge className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 font-semibold">
+                  Repository
+                </Badge>
+              )}
             </div>
             <CardDescription className="text-sm">
-              <a
-                href={result.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 w-fit"
-              >
-                {result.url}
-                <ExternalLink className="w-3 h-3" />
-              </a>
+              {isRepository ? (
+                <div className="space-y-1">
+                  <div className="text-gray-600 dark:text-gray-400 font-mono text-xs">
+                    {result.metadata.full_path}
+                  </div>
+                  {result.metadata.lines && (
+                    <div className="text-gray-500 dark:text-gray-500 text-xs">
+                      Lines: {result.metadata.lines}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <a
+                  href={result.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 w-fit"
+                >
+                  {result.url}
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
             </CardDescription>
           </div>
           <Badge variant="secondary" className="ml-2 shrink-0">

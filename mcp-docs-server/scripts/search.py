@@ -59,7 +59,8 @@ def search_docs(query: str, max_results: int = 5, source_filter: str = None):
         
         # Add source filter if specified
         if source_filter:
-            search_params["where"] = {"source_name": source_filter}
+            # Use "source" field which works for both docs and repositories
+            search_params["where"] = {"source": source_filter}
         
         results = collection.query(**search_params)
         
@@ -67,16 +68,38 @@ def search_docs(query: str, max_results: int = 5, source_filter: str = None):
         formatted_results = []
         if results['documents'][0]:
             for doc, metadata in zip(results['documents'][0], results['metadatas'][0]):
-                formatted_results.append({
-                    'title': metadata.get('title', 'Untitled'),
-                    'url': metadata.get('url', ''),
-                    'content': doc,
-                    'metadata': {
-                        'wordCount': len(doc.split()),
-                        'source': metadata.get('source', ''),
-                        'source_name': metadata.get('source_name', metadata.get('source', '').replace("https://", "").replace("http://", "").split("/")[0])
-                    }
-                })
+                # Check if this is a repository or documentation chunk
+                is_repository = metadata.get('source_type') == 'repository'
+                
+                if is_repository:
+                    # Repository chunk - use file path as title
+                    formatted_results.append({
+                        'title': metadata.get('file_path', 'Untitled'),
+                        'url': metadata.get('full_path', ''),
+                        'content': doc,
+                        'metadata': {
+                            'wordCount': len(doc.split()),
+                            'source': metadata.get('source', ''),
+                            'source_name': metadata.get('source', ''),
+                            'source_type': 'repository',
+                            'file_path': metadata.get('file_path', ''),
+                            'full_path': metadata.get('full_path', ''),
+                            'lines': metadata.get('lines', '')
+                        }
+                    })
+                else:
+                    # Documentation chunk - use page title
+                    formatted_results.append({
+                        'title': metadata.get('title', 'Untitled'),
+                        'url': metadata.get('url', ''),
+                        'content': doc,
+                        'metadata': {
+                            'wordCount': len(doc.split()),
+                            'source': metadata.get('source', ''),
+                            'source_name': metadata.get('source_name', metadata.get('source', '').replace("https://", "").replace("http://", "").split("/")[0]),
+                            'source_type': 'documentation'
+                        }
+                    })
         
         # Return JSON
         output = {
