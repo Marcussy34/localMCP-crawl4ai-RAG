@@ -56,26 +56,40 @@ def delete_source(source_name: str):
                 'error': f'Source "{source_name}" not found in metadata'
             })
         
-        # Delete all documents with this source_name from ChromaDB
-        # Get all IDs for this source
-        results = collection.get(
-            where={"source_name": source_name}
-        )
+        # Delete all documents from ChromaDB
+        # Try both "source" (repositories) and "source_name" (documentation)
+        deleted_count = 0
         
-        deleted_count = len(results['ids'])
+        # Try deleting with "source" field (for repositories)
+        try:
+            results = collection.get(where={"source": source_name})
+            if len(results['ids']) > 0:
+                collection.delete(where={"source": source_name})
+                deleted_count += len(results['ids'])
+        except:
+            pass
         
-        if deleted_count > 0:
-            # Delete the documents
-            collection.delete(
-                where={"source_name": source_name}
-            )
+        # Try deleting with "source_name" field (for documentation)
+        try:
+            results = collection.get(where={"source_name": source_name})
+            if len(results['ids']) > 0:
+                collection.delete(where={"source_name": source_name})
+                deleted_count += len(results['ids'])
+        except:
+            pass
         
         # Update metadata
         metadata['sources'] = [s for s in metadata['sources'] if s['name'] != source_name]
         
-        # Recalculate totals
-        total_chunks = sum(s.get('chunks', 0) for s in metadata['sources'])
-        total_words = sum(s.get('words', 0) for s in metadata['sources'])
+        # Recalculate totals (handle both docs and repos)
+        total_chunks = sum(
+            s.get('chunks', 0) or s.get('total_chunks', 0) 
+            for s in metadata['sources']
+        )
+        total_words = sum(
+            s.get('words', 0) or s.get('total_lines', 0) 
+            for s in metadata['sources']
+        )
         
         metadata['total_chunks'] = total_chunks
         metadata['total_words'] = total_words
@@ -93,12 +107,12 @@ def delete_source(source_name: str):
         output = {
             'success': True,
             'message': f'Successfully deleted source "{source_name}"',
-            'deletedChunks': deleted_count,
-            'remainingSources': len(metadata['sources']),
-            'updatedMetadata': {
-                'totalChunks': total_chunks,
-                'totalWords': total_words,
-                'totalSources': len(metadata['sources'])
+            'chunks_removed': deleted_count,
+            'remaining_sources': len(metadata['sources']),
+            'updated_metadata': {
+                'total_chunks': total_chunks,
+                'total_words': total_words,
+                'total_sources': len(metadata['sources'])
             }
         }
         
