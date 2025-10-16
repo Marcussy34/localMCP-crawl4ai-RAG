@@ -50,8 +50,14 @@ __pycache__/
 
 !.env.example
 
-# MCP docs server data (generated indexes and crawled docs)
+# MCP docs server data (large database files and indexes)
+# ChromaDB vector database files (can be very large)
 mcp-docs-server/data/chroma_db/
+# Crawled documentation JSON files
 mcp-docs-server/data/raw/
+# Metadata and chunk information
 mcp-docs-server/data/chunks/
+
+# Test files
+test.md
 
