@@ -43,18 +43,31 @@ export default async function handler(req, res) {
       repoPath: source.repo_path // For repositories
     }));
     
+    // Calculate totals from sources (handle both docs and repos)
+    const totalPagesFromSources = metadata.sources?.reduce((sum, s) => {
+      return sum + (s.pages || s.total_files || 0);
+    }, 0) || 0;
+    
+    const totalChunksFromSources = metadata.sources?.reduce((sum, s) => {
+      return sum + (s.chunks || s.total_chunks || 0);
+    }, 0) || 0;
+    
+    const totalWordsFromSources = metadata.sources?.reduce((sum, s) => {
+      return sum + (s.words || s.total_lines || 0);
+    }, 0) || 0;
+
     const response = {
       // Multi-source format
       sources: formattedSources,
-      totalSources: metadata.total_sources || (metadata.sources ? metadata.sources.length : 1),
+      totalSources: metadata.sources ? metadata.sources.length : 1,
       
       // Single source backward compatibility
       source: metadata.source || (metadata.sources && metadata.sources.length > 0 ? metadata.sources[0].url : 'Unknown'),
       
-      // Totals
-      totalPages: metadata.total_pages || metadata.sources?.reduce((sum, s) => sum + s.pages, 0) || 0,
-      totalChunks: metadata.total_chunks,
-      totalWords: metadata.total_words,
+      // Totals (calculate from sources to include both docs and repos)
+      totalPages: totalPagesFromSources,
+      totalChunks: totalChunksFromSources,
+      totalWords: totalWordsFromSources,
       
       // Metadata
       indexedAt: metadata.indexed_at || metadata.last_updated,
