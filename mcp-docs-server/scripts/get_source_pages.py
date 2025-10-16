@@ -39,9 +39,9 @@ def get_source_pages(source_name: str):
         # Get collection
         collection = chroma_client.get_collection(name="documentation")
         
-        # Get all documents for this source
+        # Get all documents for this source (try both field names)
         results = collection.get(
-            where={"source_name": source_name},
+            where={"source": source_name},
             include=["metadatas", "documents"]
         )
         
@@ -51,7 +51,11 @@ def get_source_pages(source_name: str):
                 'error': f'No documents found for source "{source_name}"'
             })
         
-        # Group chunks by page URL
+        # Determine if this is a repository or documentation source
+        first_metadata = results['metadatas'][0] if results['metadatas'] else {}
+        is_repository = first_metadata.get('source_type') == 'repository'
+        
+        # Group chunks by page URL or file path
         pages_dict = defaultdict(lambda: {
             'title': '',
             'url': '',
@@ -64,26 +68,34 @@ def get_source_pages(source_name: str):
             results['metadatas'],
             results['documents']
         )):
-            url = metadata.get('url', '')
-            title = metadata.get('title', 'Untitled')
+            if is_repository:
+                # For repositories: use file_path
+                identifier = metadata.get('file_path', '')
+                title = metadata.get('file_path', 'Untitled')
+                url = metadata.get('full_path', '')
+            else:
+                # For documentation: use url
+                identifier = metadata.get('url', '')
+                title = metadata.get('title', 'Untitled')
+                url = metadata.get('url', '')
             
-            if url not in pages_dict:
-                pages_dict[url]['title'] = title
-                pages_dict[url]['url'] = url
+            if identifier not in pages_dict:
+                pages_dict[identifier]['title'] = title
+                pages_dict[identifier]['url'] = url
             
             # Add chunk info
-            chunk_words = len(content.split())
-            pages_dict[url]['chunks'].append({
+            chunk_words = len(content.split()) if not is_repository else metadata.get('lines', 0)
+            pages_dict[identifier]['chunks'].append({
                 'id': doc_id,
                 'content': content,
                 'wordCount': chunk_words,
-                'chunkIndex': len(pages_dict[url]['chunks'])
+                'chunkIndex': len(pages_dict[identifier]['chunks'])
             })
-            pages_dict[url]['totalWords'] += chunk_words
+            pages_dict[identifier]['totalWords'] += chunk_words
         
         # Convert to list and sort by title
         pages = []
-        for url, page_data in pages_dict.items():
+        for identifier, page_data in pages_dict.items():
             pages.append({
                 'title': page_data['title'],
                 'url': page_data['url'],
