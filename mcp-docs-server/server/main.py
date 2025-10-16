@@ -41,11 +41,20 @@ with open(metadata_path, 'r') as f:
     metadata = json.load(f)
 
 # Format metadata for compatibility (support both single and multi-source)
+def get_source_display(sources):
+    """Get display name for the first source"""
+    if not sources:
+        return "Unknown"
+    first = sources[0]
+    if first.get("type") == "repository":
+        return first.get("name", "Unknown Repository")
+    return first.get("url", first.get("name", "Unknown"))
+
 index_metadata = {
     "total_pages": metadata.get("total_pages", 0) or sum(s.get("pages", 0) for s in metadata.get("sources", [])),
     "total_chunks": metadata.get("total_chunks", 0),
     "total_words": metadata.get("total_words", 0),
-    "source": metadata.get("source") or (metadata["sources"][0]["url"] if metadata.get("sources") else "Unknown"),
+    "source": metadata.get("source") or get_source_display(metadata.get("sources", [])),
     "sources": metadata.get("sources", []),
     "indexed_at": metadata.get("indexed_at") or metadata.get("last_updated"),
     "embedding_model": metadata.get("embedding_model", "text-embedding-3-small"),
