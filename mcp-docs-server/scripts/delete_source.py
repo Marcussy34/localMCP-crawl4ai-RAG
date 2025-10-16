@@ -99,10 +99,12 @@ def delete_source(source_name: str):
         with open(metadata_path, 'w') as f:
             json.dump(metadata, f, indent=2)
         
-        # Optionally delete the raw data file
-        raw_file = Path(__file__).parent.parent / "data" / "raw" / source_to_delete.get('file', '')
-        if raw_file.exists():
-            raw_file.unlink()
+        # Optionally delete the raw data file (only for documentation sources)
+        raw_filename = source_to_delete.get('file')
+        if raw_filename:  # Only if there's actually a file specified
+            raw_file = Path(__file__).parent.parent / "data" / "raw" / raw_filename
+            if raw_file.exists() and raw_file.is_file():
+                raw_file.unlink()
         
         output = {
             'success': True,
@@ -120,11 +122,13 @@ def delete_source(source_name: str):
         return 0
         
     except Exception as e:
+        import traceback
         error_output = {
             'success': False,
-            'error': str(e)
+            'error': str(e),
+            'traceback': traceback.format_exc()
         }
-        print(json.dumps(error_output))
+        print(json.dumps(error_output), file=sys.stderr)
         return 1
 
 if __name__ == "__main__":
