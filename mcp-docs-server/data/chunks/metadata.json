@@ -9,21 +9,11 @@
       "words": 47452,
       "indexed_at": "2025-10-10T03:33:43.813526Z",
       "file": "moca_network_docs.json"
-    },
-    {
-      "name": "Stacks",
-      "url": "https://docs.stacks.co/",
-      "type": "documentation",
-      "pages": 164,
-      "chunks": 1594,
-      "words": 238946,
-      "indexed_at": "2025-10-10T07:57:33.769495Z",
-      "file": "stacks_docs.json"
     }
   ],
-  "total_chunks": 1831,
-  "total_words": 286398,
-  "total_sources": 2,
+  "total_chunks": 237,
+  "total_words": 47452,
+  "total_sources": 1,
   "embedding_model": "text-embedding-3-small",
   "chunk_size": 800,
   "chunk_overlap": 100,
