@@ -176,6 +176,14 @@ class RepoIndexer:
         )
         return response.data[0].embedding
     
+    def create_embeddings_batch(self, texts: List[str]) -> List[List[float]]:
+        """Create embeddings for multiple texts in one API call (much faster!)"""
+        response = self.openai_client.embeddings.create(
+            model=self.embedding_model,
+            input=texts
+        )
+        return [item.embedding for item in response.data]
+    
     def index_repository(self, repo_path: str, source_name: str, file_extensions: List[str] = None):
         """Index repository files"""
         
@@ -194,7 +202,6 @@ class RepoIndexer:
         print()
         
         all_chunks = []
-        all_embeddings = []
         all_metadatas = []
         all_ids = []
         
@@ -217,7 +224,7 @@ class RepoIndexer:
                 self.collection.delete(ids=old_ids)
                 print(f"🗑️  Removed {len(old_ids)} old chunks")
         
-        # Process each file
+        # Process each file and collect all chunks first
         for file_idx, file_data in enumerate(files):
             print(f"Processing file {file_idx + 1}/{total_files}: {file_data['path']}...")
             
@@ -235,21 +242,29 @@ class RepoIndexer:
                 }
             )
             
-            # Create embeddings for each chunk
+            # Add chunks to collection
             for chunk_idx, chunk in enumerate(chunks):
                 chunk_id = f"{source_name}_file_{file_idx}_chunk_{chunk_idx}"
                 
-                # Create embedding
-                embedding = self.create_embedding(chunk["text"])
-                
                 all_chunks.append(chunk["text"])
-                all_embeddings.append(embedding)
                 all_metadatas.append(chunk["metadata"])
                 all_ids.append(chunk_id)
-                
-                # Progress indicator
-                if len(all_chunks) % 10 == 0:
-                    print(f"  ✓ Embedded {len(all_chunks)} chunks so far...")
+        
+        print(f"\n📊 Created {len(all_chunks)} total chunks")
+        print(f"🚀 Creating embeddings in batches (much faster!)...")
+        
+        # Create embeddings in batches
+        all_embeddings = []
+        batch_size = 50  # OpenAI allows up to 2048, but 50 is safe and fast
+        
+        for i in range(0, len(all_chunks), batch_size):
+            batch_texts = all_chunks[i:i + batch_size]
+            
+            # Create embeddings for this batch
+            batch_embeddings = self.create_embeddings_batch(batch_texts)
+            all_embeddings.extend(batch_embeddings)
+            
+            print(f"  ✓ Embedded {len(all_embeddings)}/{len(all_chunks)} chunks ({(len(all_embeddings)/len(all_chunks)*100):.1f}%)")
         
         # Store in ChromaDB
         print(f"\n💾 Storing {len(all_chunks)} chunks in ChromaDB...")
