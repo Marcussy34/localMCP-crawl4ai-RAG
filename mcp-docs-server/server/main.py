@@ -179,7 +179,8 @@ async def handle_call_tool(
             # Build search parameters
             search_params = {
                 "query_embeddings": [query_embedding],
-                "n_results": max_results
+                "n_results": max_results,
+                "include": ["documents", "metadatas"]
             }
             
             # Add source filter if specified
