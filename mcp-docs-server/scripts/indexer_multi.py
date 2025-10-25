@@ -280,8 +280,8 @@ class MultiDocIndexer:
         self.metadata.setdefault("sources", []).append(new_source_info)
         
         # Update totals
-        self.metadata["total_chunks"] = sum(s["chunks"] for s in self.metadata["sources"])
-        self.metadata["total_words"] = sum(s["words"] for s in self.metadata["sources"])
+        self.metadata["total_chunks"] = sum(s.get("chunks", s.get("total_chunks", 0)) for s in self.metadata["sources"])
+        self.metadata["total_words"] = sum(s.get("words", 0) for s in self.metadata["sources"])
         self.metadata["total_sources"] = len(self.metadata["sources"])
         
         self.save_metadata()
@@ -299,7 +299,11 @@ class MultiDocIndexer:
         print(f"   Total Words: {self.metadata['total_words']:,}")
         print(f"\n   Indexed sources:")
         for src in self.metadata["sources"]:
-            print(f"   • {src['name']} ({src['pages']} pages, {src['chunks']} chunks)")
+            # Handle both documentation and repository sources
+            pages = src.get('pages', src.get('total_files', 0))
+            chunks = src.get('chunks', src.get('total_chunks', 0))
+            unit = 'files' if 'total_files' in src else 'pages'
+            print(f"   • {src['name']} ({pages} {unit}, {chunks} chunks)")
 
 if __name__ == "__main__":
     import argparse
