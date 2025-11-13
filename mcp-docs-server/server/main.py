@@ -35,10 +35,8 @@ chroma_client = chromadb.PersistentClient(
     settings=Settings(anonymized_telemetry=False)
 )
 
-# Load metadata
+# Metadata path
 metadata_path = Path(__file__).parent.parent / "data" / "chunks" / "metadata.json"
-with open(metadata_path, 'r') as f:
-    metadata = json.load(f)
 
 # Format metadata for compatibility (support both single and multi-source)
 def get_source_display(sources):
@@ -50,17 +48,43 @@ def get_source_display(sources):
         return first.get("name", "Unknown Repository")
     return first.get("url", first.get("name", "Unknown"))
 
-index_metadata = {
-    "total_pages": metadata.get("total_pages", 0) or sum(s.get("pages", 0) for s in metadata.get("sources", [])),
-    "total_chunks": metadata.get("total_chunks", 0),
-    "total_words": metadata.get("total_words", 0),
-    "source": metadata.get("source") or get_source_display(metadata.get("sources", [])),
-    "sources": metadata.get("sources", []),
-    "indexed_at": metadata.get("indexed_at") or metadata.get("last_updated"),
-    "embedding_model": metadata.get("embedding_model", "text-embedding-3-small"),
-    "chunk_size": metadata.get("chunk_size", 800),
-    "chunk_overlap": metadata.get("chunk_overlap", 100)
-}
+def load_metadata():
+    """Load and format metadata from file (reloads dynamically)"""
+    try:
+        # Resolve absolute path to ensure we're reading the correct file
+        abs_path = metadata_path.resolve()
+        with open(abs_path, 'r') as f:
+            metadata = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        # Log error for debugging (only to stderr, not in MCP response)
+        print(f"Error loading metadata from {metadata_path.resolve()}: {e}", file=sys.stderr)
+        # Return default metadata if file doesn't exist or is invalid
+        return {
+            "total_pages": 0,
+            "total_chunks": 0,
+            "total_words": 0,
+            "source": "Unknown",
+            "sources": [],
+            "indexed_at": "N/A",
+            "embedding_model": "text-embedding-3-small",
+            "chunk_size": 800,
+            "chunk_overlap": 100
+        }
+    
+    return {
+        "total_pages": metadata.get("total_pages", 0) or sum(s.get("pages", 0) for s in metadata.get("sources", [])),
+        "total_chunks": metadata.get("total_chunks", 0),
+        "total_words": metadata.get("total_words", 0),
+        "source": metadata.get("source") or get_source_display(metadata.get("sources", [])),
+        "sources": metadata.get("sources", []),
+        "indexed_at": metadata.get("indexed_at") or metadata.get("last_updated"),
+        "embedding_model": metadata.get("embedding_model", "text-embedding-3-small"),
+        "chunk_size": metadata.get("chunk_size", 800),
+        "chunk_overlap": metadata.get("chunk_overlap", 100)
+    }
+
+# Load initial metadata
+index_metadata = load_metadata()
 
 # Get collection
 try:
@@ -74,17 +98,24 @@ server = Server("marcus-mcp-server")
 
 @server.list_tools()
 async def handle_list_tools() -> list[types.Tool]:
-    """List available tools"""
+    """List available tools - reloads metadata dynamically"""
+    # Reload metadata to get current sources
+    current_metadata = load_metadata()
+    
+    # Build available sources list for description
+    source_names = [s['name'] for s in current_metadata.get('sources', [])]
+    sources_text = ', '.join(source_names) if source_names else 'None'
+    
     return [
         types.Tool(
             name="search-docs",
             description=(
-                f"Search through {index_metadata['source']} documentation using semantic search. "
+                f"Search through indexed documentation using semantic search. "
                 f"Returns relevant documentation chunks with context. "
-                f"Indexed: {index_metadata['total_pages']} pages, "
-                f"{index_metadata['total_chunks']} chunks, "
-                f"{index_metadata['total_words']:,} words. "
-                f"Available sources: {', '.join(s['name'] for s in index_metadata.get('sources', []))}"
+                f"Indexed: {current_metadata['total_pages']} pages, "
+                f"{current_metadata['total_chunks']} chunks, "
+                f"{current_metadata['total_words']:,} words. "
+                f"Available sources: {sources_text}"
             ),
             inputSchema={
                 "type": "object",
@@ -100,7 +131,7 @@ async def handle_list_tools() -> list[types.Tool]:
                     },
                     "source": {
                         "type": "string",
-                        "description": f"Optional: Filter by documentation source. Available: {', '.join(s['name'] for s in index_metadata.get('sources', []))}. Leave empty to search all sources."
+                        "description": f"Optional: Filter by documentation source. Available sources: {sources_text}. Leave empty to search all sources."
                     }
                 },
                 "required": ["query"]
@@ -121,24 +152,26 @@ async def handle_call_tool(
     name: str, 
     arguments: dict
 ) -> list[types.TextContent]:
-    """Handle tool calls"""
+    """Handle tool calls - reloads metadata dynamically"""
+    # Reload metadata to get current state
+    current_metadata = load_metadata()
     
     if name == "get-index-info":
         info = (
             f"📚 **Documentation Index Information**\n\n"
-            f"**Last Updated:** {index_metadata['indexed_at']}\n"
-            f"**Total Pages:** {index_metadata['total_pages']}\n"
-            f"**Total Chunks:** {index_metadata['total_chunks']}\n"
-            f"**Total Words:** {index_metadata['total_words']:,}\n"
-            f"**Embedding Model:** {index_metadata['embedding_model']}\n"
-            f"**Chunk Size:** {index_metadata['chunk_size']} tokens\n"
-            f"**Chunk Overlap:** {index_metadata['chunk_overlap']} tokens\n\n"
+            f"**Last Updated:** {current_metadata['indexed_at']}\n"
+            f"**Total Pages:** {current_metadata['total_pages']}\n"
+            f"**Total Chunks:** {current_metadata['total_chunks']}\n"
+            f"**Total Words:** {current_metadata['total_words']:,}\n"
+            f"**Embedding Model:** {current_metadata['embedding_model']}\n"
+            f"**Chunk Size:** {current_metadata['chunk_size']} tokens\n"
+            f"**Chunk Overlap:** {current_metadata['chunk_overlap']} tokens\n\n"
         )
         
         # Add sources breakdown if available
-        if index_metadata.get('sources'):
+        if current_metadata.get('sources'):
             info += "**📖 Available Sources:**\n\n"
-            for source in index_metadata['sources']:
+            for source in current_metadata['sources']:
                 is_repo = source.get('type') == 'repository'
                 info += f"- **{source['name']}** ({'Repository' if is_repo else 'Documentation'})\n"
                 
@@ -190,7 +223,7 @@ async def handle_call_tool(
                 filter_field = None
                 
                 # Check metadata to see if this is a documentation source
-                for src in index_metadata.get("sources", []):
+                for src in current_metadata.get("sources", []):
                     if src.get("name") == source_filter:
                         # It's a documentation source, use source_name
                         if src.get("type") == "documentation":
