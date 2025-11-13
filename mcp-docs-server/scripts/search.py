@@ -43,6 +43,13 @@ def search_docs(query: str, max_results: int = 5, source_filter: str = None):
         # Get collection
         collection = chroma_client.get_collection(name="documentation")
         
+        # Load metadata to determine filter field
+        metadata_path = Path(__file__).parent.parent / "data" / "chunks" / "metadata.json"
+        metadata = {}
+        if metadata_path.exists():
+            with open(metadata_path, 'r') as f:
+                metadata = json.load(f)
+        
         # Generate embedding for query
         embedding_model = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
         response = openai_client.embeddings.create(
@@ -59,8 +66,28 @@ def search_docs(query: str, max_results: int = 5, source_filter: str = None):
         
         # Add source filter if specified
         if source_filter:
-            # Use "source" field which works for both docs and repositories
-            search_params["where"] = {"source": source_filter}
+            # Determine which field to use for filtering
+            # Documentation sources use "source_name", repositories use "source"
+            filter_field = None
+            
+            # Check metadata to see if this is a documentation source
+            for src in metadata.get("sources", []):
+                if src.get("name") == source_filter:
+                    # It's a documentation source, use source_name
+                    if src.get("type") == "documentation":
+                        filter_field = "source_name"
+                    else:
+                        # It's a repository, use source
+                        filter_field = "source"
+                    break
+            
+            # If not found in metadata, try source_name first (for documentation)
+            # then fall back to source (for repositories or URLs)
+            if filter_field is None:
+                # Default to source_name for documentation sources
+                filter_field = "source_name"
+            
+            search_params["where"] = {filter_field: source_filter}
         
         results = collection.query(**search_params)
         
